@@ -289,22 +289,25 @@ const CONFIG = {
     "Downtime_Hourly",
     "Idletime_Hourly",
     "Oee_Hourly"
-  ]
+  ],
+  DEFAULT_DEVICE_ID: "81261350-b886-11f0-87ea-b9809c1a7a9e"   // ✅ your fixed device ID
 };
 
 const qs = new URLSearchParams(location.search);
 const JWT = qs.get("token") || "";
-const DEVICE_ID = qs.get("deviceId") || "";
-if (!JWT || !DEVICE_ID) alert("Missing token or deviceId in URL");
+const URL_DEVICE = qs.get("deviceId") || "";
+const DEVICE_ID = URL_DEVICE || CONFIG.DEFAULT_DEVICE_ID;      // ✅ fallback to default
+
+if (!JWT) alert("Missing token in URL (device ID is set to default).");
 
 function num(v){ const n = Number(v); return Number.isFinite(n)?n:0; }
 function fmtTime(ts){ return new Date(ts).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}); }
 
 async function fetchHourlyData(){
   const end = Date.now();
-  const start = end - 24*3600*1000;
+  const start = end - 24*3600*1000;  // last 24 hours
   const url = `${CONFIG.API_BASE_URL}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries`
-    + `?keys=${CONFIG.KEYS.join(",")}&startTs=${start}&endTs=${end}&limit=1000&agg=NONE`;
+            + `?keys=${CONFIG.KEYS.join(",")}&startTs=${start}&endTs=${end}&limit=1000&agg=NONE`;
   const res = await fetch(url, { headers: { "X-Authorization": `Bearer ${JWT}` }});
   if(!res.ok) throw new Error(res.statusText);
   return res.json();
@@ -411,5 +414,6 @@ async function init(){
 }
 window.addEventListener("load",init);
 </script>
+
 </body>
 </html>
