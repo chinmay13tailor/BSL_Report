@@ -4,297 +4,208 @@
 <meta charset="UTF-8">
 <title>Montex Production & Energy Performance Report</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Plotly + PDF deps -->
 <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Font Awesome 6 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
 <style>
-body {
-  font-family: "Segoe UI", sans-serif;
-  background: #f3f4f6;
-  color: #1e293b;
-  margin: 0;
-}
-.page { padding: 1.5rem; }
+body{font-family:"Segoe UI",sans-serif;background:#f3f4f6;color:#1e293b;margin:0;}
+.page{padding:1.5rem;}
+.card{background:#fff;border-radius:12px;padding:1.2rem 1.5rem;margin-bottom:1.5rem;
+      box-shadow:0 2px 10px rgba(0,0,0,0.08);}
+.card h2{display:flex;align-items:center;gap:.6rem;font-size:1.1rem;color:#1e3a8a;
+         margin-top:0;margin-bottom:1rem;}
+.card h2 i{color:#2563eb;}
 
-/* --- Filter Section --- */
-.filter-panel {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 1rem 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1rem;
-}
-.filter-panel label {
-  font-weight: 600;
-  color: #1e3a8a;
-}
-input, select, button {
-  padding: .5rem .8rem;
-  border-radius: 6px;
-  border: 1px solid #cbd5e1;
-  background: #f8fafc;
-  font-size: .9rem;
-  color: #1e293b;
-}
-button {
-  background: #2563eb;
-  color: #fff;
-  border: 0;
-  cursor: pointer;
-  font-weight: 600;
-}
-button:hover { background: #1d4ed8; }
-#generateBtn[disabled] { opacity: .6; cursor: not-allowed; }
-.status-label { font-size: .85rem; color: #475569; min-width: 90px; }
+/* filter panel */
+.filter-group{display:flex;flex-wrap:wrap;align-items:center;gap:1rem;}
+label{font-weight:600;color:#1e3a8a;}
+input,select,button{padding:.5rem .8rem;border-radius:6px;border:1px solid #cbd5e1;
+                    background:#f8fafc;color:#1e293b;font-size:.9rem;}
+button{background:#2563eb;color:#fff;border:0;font-weight:600;cursor:pointer;}
+button:hover{background:#1d4ed8;}
+#generateBtn[disabled]{opacity:.6;cursor:not-allowed;}
+.status-label{font-size:.85rem;color:#475569;min-width:90px;}
 
-/* --- KPI Summary --- */
-.kpi-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-.kpi {
-  background: #ffffff;
-  border-radius: 10px;
-  padding: 1rem;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-.kpi h3 { margin: 0; font-size: .95rem; color: #475569; }
-.kpi .value {
-  font-size: 1.4rem;
-  font-weight: 700;
-  margin-top: .3rem;
-  color: #2563eb;
-}
+/* KPI summary */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+         gap:1rem;}
+.kpi{background:#fff;border-radius:10px;padding:1rem;text-align:center;
+     box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+.kpi h3{margin:0;font-size:.95rem;color:#475569;}
+.kpi .value{font-size:1.4rem;font-weight:700;margin-top:.3rem;color:#2563eb;}
 
-/* --- Table --- */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #ffffff;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-th, td {
-  padding: .7rem .8rem;
-  text-align: center;
-  border-bottom: 1px solid #e2e8f0;
-}
-th { background: #f1f5f9; color: #1e3a8a; }
-tbody tr:nth-child(even) { background: #f9fafb; }
+/* table */
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;
+      overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+th,td{padding:.7rem .8rem;text-align:center;border-bottom:1px solid #e2e8f0;}
+th{background:#f1f5f9;color:#1e3a8a;}
+tbody tr:nth-child(even){background:#f9fafb;}
 
-/* --- KPI Details --- */
-.kpi-details {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 1.2rem;
-  margin-top: 2rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-}
-.kpi-details h3 {
-  color: #1e3a8a;
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
-}
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-}
-.kpi-detail {
-  background: #f9fafb;
-  border-radius: 10px;
-  padding: 1rem;
-  text-align: center;
-  border: 1px solid #e2e8f0;
-}
-.kpi-detail h4 { margin: 0; font-size: 1rem; color: #475569; }
-.kpi-detail .detail-value {
-  font-size: 1.6rem;
-  font-weight: 700;
-  margin-top: .4rem;
-  color: #2563eb;
-}
-.kpi-detail p { color: #64748b; font-size: .85rem; margin-top: .3rem; }
+/* detailed kpis */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+          gap:1rem;}
+.kpi-detail{background:#f9fafb;border-radius:10px;padding:1rem;text-align:center;
+            border:1px solid #e2e8f0;}
+.kpi-detail h4{margin:0;font-size:1rem;color:#475569;}
+.kpi-detail .detail-value{font-size:1.6rem;font-weight:700;margin-top:.4rem;
+                          color:#2563eb;}
+.kpi-detail p{color:#64748b;font-size:.85rem;margin-top:.3rem;}
 
-/* --- Chart --- */
-.chart-box {
-  margin-top: 2rem;
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-}
-.chart-box h3 {
-  color: #1e3a8a;
-  font-size: 1.1rem;
-  margin-bottom: .6rem;
-}
+/* chart */
+#trendChart{height:360px;}
 
-/* --- Footer Note --- */
-.footer-note {
-  margin-top: 1.5rem;
-  background: #dbeafe;
-  color: #1e3a8a;
-  padding: .8rem;
-  border-radius: 8px;
-  font-size: .85rem;
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-}
+/* footer note */
+.footer-note{background:#dbeafe;color:#1e3a8a;padding:.8rem;border-radius:8px;
+             font-size:.85rem;display:flex;align-items:center;gap:.5rem;}
 </style>
 </head>
 <body>
 <div class="page" id="reportArea">
 
-  <!-- Filter Panel -->
-  <div class="filter-panel">
-    <label>Date:</label>
-    <input type="date" id="dateInput">
-    <label>Shift:</label>
-    <select id="shift">
-      <option>Shift A</option>
-      <option>Shift B</option>
-      <option>Shift C</option>
-      <option>Full Day</option>
-    </select>
-    <button id="generateBtn" onclick="generate()">Generate</button>
-    <button onclick="downloadPDF()">Download PDF</button>
-    <span class="status-label" id="statusLabel">—</span>
-  </div>
-
-  <!-- KPI Summary -->
-  <div class="kpi-row">
-    <div class="kpi"><h3>Fabric Produced</h3><div class="value" id="fabricProduced">0 m</div></div>
-    <div class="kpi"><h3>Runtime (hrs)</h3><div class="value" id="runtime">0.0</div></div>
-    <div class="kpi"><h3>Downtime (hrs)</h3><div class="value" id="downtime">0.0</div></div>
-    <div class="kpi"><h3>Idle Time (hrs)</h3><div class="value" id="idle">0.0</div></div>
-    <div class="kpi"><h3>Energy Used (kWh)</h3><div class="value" id="energy">0.0</div></div>
-    <div class="kpi"><h3>OEE (%)</h3><div class="value" id="oee">0.0%</div></div>
-  </div>
-
-  <!-- Hourly Table -->
-  <table>
-    <thead>
-      <tr>
-        <th>Time</th><th>Fabric (m)</th><th>Runtime (h)</th><th>Downtime (h)</th><th>Idle (h)</th><th>Energy (kWh)</th><th>OEE (%)</th>
-      </tr>
-    </thead>
-    <tbody id="hourlyTable"><tr><td colspan="7">Awaiting data...</td></tr></tbody>
-  </table>
-
-  <!-- KPI Details -->
-  <div class="kpi-details">
-    <h3>Detailed KPIs</h3>
-    <div class="kpi-grid">
-      <div class="kpi-detail"><h4>Avg Fabric Speed</h4><div class="detail-value" id="avgSpeed">—</div><p>m/hr</p></div>
-      <div class="kpi-detail"><h4>Energy per Meter</h4><div class="detail-value" id="energyPerMeter">—</div><p>kWh/m</p></div>
-      <div class="kpi-detail"><h4>Shift Efficiency</h4><div class="detail-value" id="shiftEfficiency">—</div><p>Overall utilization</p></div>
-      <div class="kpi-detail"><h4>Production Consistency</h4><div class="detail-value" id="productionConsistency">—</div><p>Variation (%)</p></div>
+  <!-- Card 1: Selection -->
+  <div class="card">
+    <h2><i class="fa-solid fa-sliders"></i> Report Filters</h2>
+    <div class="filter-group">
+      <label>Date:</label><input type="date" id="dateInput">
+      <label>Shift:</label>
+      <select id="shift">
+        <option>Shift A</option><option>Shift B</option>
+        <option>Shift C</option><option>Full Day</option>
+      </select>
+      <button id="generateBtn" onclick="generate()">Generate</button>
+      <button onclick="downloadPDF()"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+      <span class="status-label" id="statusLabel">—</span>
     </div>
   </div>
 
-  <!-- Chart -->
-  <div class="chart-box">
-    <h3>Production & Energy Trend</h3>
-    <div id="trendChart" style="height:360px;"></div>
+  <!-- Card 2: KPI Summary -->
+  <div class="card">
+    <h2><i class="fa-solid fa-gauge-high"></i> KPI Summary</h2>
+    <div class="kpi-row">
+      <div class="kpi"><h3>Fabric Produced</h3><div class="value" id="fabricProduced">0 m</div></div>
+      <div class="kpi"><h3>Runtime (hrs)</h3><div class="value" id="runtime">0.0</div></div>
+      <div class="kpi"><h3>Downtime (hrs)</h3><div class="value" id="downtime">0.0</div></div>
+      <div class="kpi"><h3>Idle Time (hrs)</h3><div class="value" id="idle">0.0</div></div>
+      <div class="kpi"><h3>Energy (kWh)</h3><div class="value" id="energy">0.0</div></div>
+      <div class="kpi"><h3>OEE (%)</h3><div class="value" id="oee">0.0%</div></div>
+    </div>
   </div>
 
-  <!-- Footer Note -->
-  <div class="footer-note">
-    <span>💡 Note: Energy Efficiency improved 3.2% due to optimized process control.</span>
+  <!-- Card 3: Hourly Data -->
+  <div class="card">
+    <h2><i class="fa-solid fa-clock"></i> Hourly Data</h2>
+    <table>
+      <thead><tr>
+        <th>Time</th><th>Fabric (m)</th><th>Runtime (h)</th><th>Downtime (h)</th>
+        <th>Idle (h)</th><th>Energy (kWh)</th><th>OEE (%)</th>
+      </tr></thead>
+      <tbody id="hourlyTable"><tr><td colspan="7">Awaiting data...</td></tr></tbody>
+    </table>
   </div>
 
+  <!-- Card 4: Detailed KPIs -->
+  <div class="card">
+    <h2><i class="fa-solid fa-microchip"></i> Detailed KPIs</h2>
+    <div class="kpi-grid">
+      <div class="kpi-detail"><h4>Avg Fabric Speed</h4>
+        <div class="detail-value" id="avgSpeed">—</div><p>m/hr</p></div>
+      <div class="kpi-detail"><h4>Energy per Meter</h4>
+        <div class="detail-value" id="energyPerMeter">—</div><p>kWh/m</p></div>
+      <div class="kpi-detail"><h4>Shift Efficiency</h4>
+        <div class="detail-value" id="shiftEfficiency">—</div><p>Overall utilization</p></div>
+      <div class="kpi-detail"><h4>Production Consistency</h4>
+        <div class="detail-value" id="productionConsistency">—</div><p>Variation (%)</p></div>
+    </div>
+  </div>
+
+  <!-- Card 5: Chart -->
+  <div class="card">
+    <h2><i class="fa-solid fa-chart-line"></i> Production & Energy Trend</h2>
+    <div id="trendChart"></div>
+  </div>
+
+  <!-- Card 6: Footer Note -->
+  <div class="card footer-note">
+    <i class="fa-solid fa-lightbulb"></i>
+    <span>Energy Efficiency improved 3.2% since SMR due to optimized temperature control.</span>
+  </div>
 </div>
 
 <script>
-const CONFIG = {
-  API_BASE_URL: "https://plantwiz.pimateck.in/api",
-  KEYS: ["Meter_Run_Hourly","Consumption_Hourly","Runtime_Hourly","Downtime_Hourly","Idletime_Hourly","Oee_Hourly"],
-  DEFAULT_DEVICE_ID: "81261350-b886-11f0-87ea-b9809c1a7a9e"
-};
-const qs = new URLSearchParams(location.search);
-const JWT = qs.get("token") || "";
-const DEVICE_ID = CONFIG.DEFAULT_DEVICE_ID;
+const CONFIG={API_BASE_URL:"https://plantwiz.pimateck.in/api",
+  KEYS:["Meter_Run_Hourly","Consumption_Hourly","Runtime_Hourly",
+        "Downtime_Hourly","Idletime_Hourly","Oee_Hourly"],
+  DEFAULT_DEVICE_ID:"81261350-b886-11f0-87ea-b9809c1a7a9e"};
+const qs=new URLSearchParams(location.search);
+const JWT=qs.get("token")||"";const DEVICE_ID=CONFIG.DEFAULT_DEVICE_ID;
 
-function num(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
-function fmtTime(ts){ const corrected = ts - 3600000; return new Date(corrected).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}); }
+function num(v){const n=Number(v);return Number.isFinite(n)?n:0;}
+function fmtTime(ts){const corrected=ts-3600000;
+  return new Date(corrected).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});}
 
-function getShiftRange(dateStr, shift){
-  const date = new Date(dateStr);
-  let start = new Date(date), end = new Date(date);
-  if(shift==="A"){ start.setHours(0,0,0,0); end.setHours(8,0,0,0); }
-  else if(shift==="B"){ start.setHours(8,0,0,0); end.setHours(16,0,0,0); }
-  else if(shift==="C"){ start.setHours(16,0,0,0); end.setHours(23,59,59,999); }
-  else { start.setHours(0,0,0,0); end.setHours(23,59,59,999); }
-  const offset = start.getTimezoneOffset() * 60 * 1000;
-  return { startTs: start.getTime() - offset, endTs: end.getTime() - offset };
+function getShiftRange(dateStr,shift){
+  const date=new Date(dateStr);let start=new Date(date),end=new Date(date);
+  if(shift==="A"){start.setHours(0,0,0,0);end.setHours(8,0,0,0);}
+  else if(shift==="B"){start.setHours(8,0,0,0);end.setHours(16,0,0,0);}
+  else if(shift==="C"){start.setHours(16,0,0,0);end.setHours(23,59,59,999);}
+  else{start.setHours(0,0,0,0);end.setHours(23,59,59,999);}
+  const offset=start.getTimezoneOffset()*60*1000;
+  return{startTs:start.getTime()-offset,endTs:end.getTime()-offset};
 }
 
 async function fetchHourlyData(startTs,endTs){
-  const url = `${CONFIG.API_BASE_URL}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=${CONFIG.KEYS.join(",")}&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`;
-  const res = await fetch(url,{ headers: {"X-Authorization":`Bearer ${JWT}`} });
-  if(!res.ok) throw new Error(res.statusText);
-  return res.json();
+  const url=`${CONFIG.API_BASE_URL}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=${CONFIG.KEYS.join(",")}&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`;
+  const res=await fetch(url,{headers:{"X-Authorization":`Bearer ${JWT}`}});
+  if(!res.ok)throw new Error(res.statusText);return res.json();
 }
-
-function mergeSeries(obj){
-  const map = new Map();
-  for(const [key,arr] of Object.entries(obj)){
-    (arr||[]).forEach(p=>{
-      const t = +p.ts;
-      const row = map.get(t) || { ts:t };
-      row[key] = num(p.value);
-      map.set(t,row);
-    });
+function mergeSeries(obj){const map=new Map();
+  for(const [key,arr]of Object.entries(obj)){
+    (arr||[]).forEach(p=>{const t=+p.ts;const row=map.get(t)||{ts:t};
+      row[key]=num(p.value);map.set(t,row);});
   }
   return Array.from(map.values()).sort((a,b)=>a.ts-b.ts);
 }
-
 function renderKpis(rows){
-  const tF = rows.reduce((s,r)=>s+num(r.Meter_Run_Hourly),0),
-        tR = rows.reduce((s,r)=>s+num(r.Runtime_Hourly),0),
-        tD = rows.reduce((s,r)=>s+num(r.Downtime_Hourly),0),
-        tI = rows.reduce((s,r)=>s+num(r.Idletime_Hourly),0),
-        tE = rows.reduce((s,r)=>s+num(r.Consumption_Hourly),0),
-        aO = rows.length?rows.reduce((s,r)=>s+num(r.Oee_Hourly),0)/rows.length:0;
-  document.getElementById("fabricProduced").textContent = tF.toFixed(0)+" m";
-  document.getElementById("runtime").textContent = tR.toFixed(1);
-  document.getElementById("downtime").textContent = tD.toFixed(1);
-  document.getElementById("idle").textContent = tI.toFixed(1);
-  document.getElementById("energy").textContent = tE.toFixed(1);
-  document.getElementById("oee").textContent = aO.toFixed(1)+"%";
-  const avgSpeed = tR>0?(tF/tR):0, energyPerMeter = tF>0?(tE/tF):0;
-  const prodList = rows.map(r=>r.Meter_Run_Hourly).filter(x=>x>0);
-  const mean = prodList.reduce((s,x)=>s+x,0)/prodList.length;
-  const sd = Math.sqrt(prodList.reduce((s,x)=>s+(x-mean)**2,0)/prodList.length);
-  const consistency = mean?(sd/mean*100):0;
-  document.getElementById("avgSpeed").textContent = avgSpeed.toFixed(1);
-  document.getElementById("energyPerMeter").textContent = energyPerMeter.toFixed(3);
-  document.getElementById("shiftEfficiency").textContent = aO.toFixed(1)+"%";
-  document.getElementById("productionConsistency").textContent = consistency.toFixed(1)+"%";
+  const tF=rows.reduce((s,r)=>s+num(r.Meter_Run_Hourly),0),
+        tR=rows.reduce((s,r)=>s+num(r.Runtime_Hourly),0),
+        tD=rows.reduce((s,r)=>s+num(r.Downtime_Hourly),0),
+        tI=rows.reduce((s,r)=>s+num(r.Idletime_Hourly),0),
+        tE=rows.reduce((s,r)=>s+num(r.Consumption_Hourly),0),
+        aO=rows.length?rows.reduce((s,r)=>s+num(r.Oee_Hourly),0)/rows.length:0;
+  fabricProduced.textContent=tF.toFixed(0)+" m";
+  runtime.textContent=tR.toFixed(1);
+  downtime.textContent=tD.toFixed(1);
+  idle.textContent=tI.toFixed(1);
+  energy.textContent=tE.toFixed(1);
+  oee.textContent=aO.toFixed(1)+"%";
+  const avgSpeed=tR>0?(tF/tR):0,energyPerMeter=tF>0?(tE/tF):0;
+  const prodList=rows.map(r=>r.Meter_Run_Hourly).filter(x=>x>0);
+  const mean=prodList.reduce((s,x)=>s+x,0)/prodList.length;
+  const sd=Math.sqrt(prodList.reduce((s,x)=>s+(x-mean)**2,0)/prodList.length);
+  const consistency=mean?(sd/mean*100):0;
+  avgSpeed.textContent=avgSpeed.toFixed(1);
+  energyPerMeter.textContent=energyPerMeter.toFixed(3);
+  shiftEfficiency.textContent=aO.toFixed(1)+"%";
+  productionConsistency.textContent=consistency.toFixed(1)+"%";
 }
-
 function renderTable(rows){
-  const tb=document.getElementById("hourlyTable"); tb.innerHTML="";
+  const tb=document.getElementById("hourlyTable");tb.innerHTML="";
   rows.forEach(r=>{
     const tr=document.createElement("tr");
-    const cells=[fmtTime(r.ts),r.Meter_Run_Hourly?.toFixed(0),r.Runtime_Hourly?.toFixed(1),r.Downtime_Hourly?.toFixed(1),r.Idletime_Hourly?.toFixed(1),r.Consumption_Hourly?.toFixed(1),r.Oee_Hourly?.toFixed(1)];
-    cells.forEach(v=>{const td=document.createElement("td");td.textContent=v??"—";tr.appendChild(td);});
-    tb.appendChild(tr);
+    const cells=[fmtTime(r.ts),r.Meter_Run_Hourly?.toFixed(0),
+      r.Runtime_Hourly?.toFixed(1),r.Downtime_Hourly?.toFixed(1),
+      r.Idletime_Hourly?.toFixed(1),r.Consumption_Hourly?.toFixed(1),
+      r.Oee_Hourly?.toFixed(1)];
+    cells.forEach(v=>{const td=document.createElement("td");
+      td.textContent=v??"—";tr.appendChild(td);});tb.appendChild(tr);
   });
 }
-
 function renderChart(rows){
-  if(!rows.length){ Plotly.purge("trendChart"); return; }
+  if(!rows.length){Plotly.purge("trendChart");return;}
   const t=rows.map(r=>new Date(r.ts-3600000)),
         f=rows.map(r=>r.Meter_Run_Hourly),
         r=rows.map(r=>r.Runtime_Hourly),
@@ -305,36 +216,34 @@ function renderChart(rows){
     {x:t,y:r,name:"Runtime",mode:"lines",line:{color:"#22c55e"}},
     {x:t,y:d,name:"Downtime",mode:"lines",line:{color:"#ef4444"}},
     {x:t,y:e,name:"Energy",mode:"lines",line:{color:"#f59e0b"}}
-  ],{
-    paper_bgcolor:"#ffffff",plot_bgcolor:"#ffffff",font:{color:"#1e293b"},
-    margin:{l:40,r:20,t:30,b:30},legend:{orientation:"h",y:-0.2}
-  },{displaylogo:false,responsive:true});
+  ],{paper_bgcolor:"#ffffff",plot_bgcolor:"#ffffff",font:{color:"#1e293b"},
+     margin:{l:40,r:20,t:30,b:30},legend:{orientation:"h",y:-0.2}},
+     {displaylogo:false,responsive:true});
 }
-
 async function generate(){
-  const dateStr=document.getElementById("dateInput").value;
-  const shiftVal=document.getElementById("shift").value.replace("Shift ","").trim();
-  const btn=document.getElementById("generateBtn"),status=document.getElementById("statusLabel");
+  const dateStr=dateInput.value;
+  const shiftVal=shift.value.replace("Shift ","").trim();
+  const btn=generateBtn,status=statusLabel;
   if(!dateStr){alert("Please select a date.");return;}
   btn.disabled=true;status.textContent="Generating ...";
-  const {startTs,endTs}=getShiftRange(dateStr,shiftVal);
+  const{startTs,endTs}=getShiftRange(dateStr,shiftVal);
   try{
     const json=await fetchHourlyData(startTs,endTs);
     const rows=mergeSeries(json);
     renderKpis(rows);renderTable(rows);renderChart(rows);
     status.textContent="Generated ✅";
-  }catch(e){console.error(e);alert("Failed to load data: "+e.message);status.textContent="Error ⚠️";}
+  }catch(e){console.error(e);
+    alert("Failed to load data: "+e.message);
+    status.textContent="Error ⚠️";}
   btn.disabled=false;
 }
-
 async function downloadPDF(){
-  const {jsPDF}=window.jspdf;
+  const{jsPDF}=window.jspdf;
   const element=document.getElementById("reportArea");
   const canvas=await html2canvas(element,{scale:2});
   const img=canvas.toDataURL("image/png");
   const pdf=new jsPDF("p","mm","a4");
-  const pageWidth=210,pageHeight=297;
-  const imgProps=pdf.getImageProperties(img);
+  const pageWidth=210;const imgProps=pdf.getImageProperties(img);
   const imgHeight=imgProps.height*pageWidth/imgProps.width;
   pdf.addImage(img,"PNG",0,0,pageWidth,imgHeight);
   pdf.save("Montex_Report.pdf");
