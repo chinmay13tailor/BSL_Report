@@ -1,244 +1,142 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Montex Production & Energy Performance Report</title>
+3. Fetch the six hourly parameters.  
+4. Aggregate them to show:
+- Total Fabric Produced  
+- Total Runtime / Downtime / Idle Time / Energy  
+- Average OEE  
+- Hourly table and Plotly trend  
 
-  <!-- Plotly -->
-  <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+---
 
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #0f172a;
-      color: #f3f4f6;
-      margin: 0;
-      padding: 0;
-    }
-    .page { padding: 1.5rem; }
+### 🧠 Add this script **before `</body>`**
+*(Below your last closing `</div>` and above `</body>`)*
 
-    /* Header */
-    .header {
-      background: #1e293b;
-      border-radius: 12px;
-      padding: 1rem 1.5rem;
-      box-shadow: 0 4px 15px rgba(0,0,0,.4);
-    }
-    .header h1 {
-      margin: 0;
-      font-size: 1.5rem;
-      color: #38bdf8;
-    }
-    .subtext { color: #94a3b8; font-size: 0.9rem; margin-top: 4px; }
+```html
+<script>
+/* ===== CONFIG ===== */
+const CONFIG = {
+API_BASE_URL: "https://plantwiz.pimateck.in/api",   // ✅ change if self-hosted
+KEYS: [
+ "Meter_Run_Hourly",
+ "Consumption_Hourly",
+ "Runtime_Hourly",
+ "Downtime_Hourly",
+ "Idletime_Hourly",
+ "Oee_Hourly"
+]
+};
 
-    /* Filters row */
-    .filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-      align-items: center;
-      margin-top: 1rem;
-    }
-    .filters select, .filters button {
-      background: #1e293b;
-      border: 1px solid #334155;
-      color: #f3f4f6;
-      border-radius: 8px;
-      padding: 0.45rem 0.8rem;
-      cursor: pointer;
-    }
-    .filters button.export {
-      background: #38bdf8;
-      border: none;
-      color: #000;
-      font-weight: 600;
-    }
+/* ====== TOKEN & DEVICE FROM URL ====== */
+const qs = new URLSearchParams(location.search);
+const JWT = qs.get("token") || "";
+const DEVICE_ID = qs.get("deviceId") || "";
+if (!JWT || !DEVICE_ID) alert("Missing token or deviceId in URL");
 
-    /* AI Insight */
-    .ai-banner {
-      margin-top: 1rem;
-      background: #16a34a22;
-      color: #22c55e;
-      border-left: 4px solid #22c55e;
-      border-radius: 8px;
-      padding: 0.6rem 1rem;
-      font-size: 0.95rem;
-    }
+/* ====== HELPER FUNCTIONS ====== */
+function num(v){ const n = Number(v); return Number.isFinite(n)?n:0; }
+function fmtTime(ts){ return new Date(ts).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}); }
 
-    /* KPI Cards */
-    .kpi-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
-      gap: 1rem;
-      margin-top: 1.5rem;
-    }
-    .kpi {
-      background: #1e293b;
-      border-radius: 12px;
-      padding: 1rem;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,.5);
-    }
-    .kpi h3 { margin: 0; color: #94a3b8; font-size: 0.95rem; }
-    .kpi .value { font-size: 1.8rem; font-weight: 700; margin-top: 6px; color: #38bdf8; }
+/* ====== FETCH DATA FROM THINGSBOARD ====== */
+async function fetchHourlyData(){
+const end = Date.now();
+const start = end - 24*3600*1000;  // last 24 hours
+const url = `${CONFIG.API_BASE_URL}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries`
+         + `?keys=${CONFIG.KEYS.join(",")}&startTs=${start}&endTs=${end}&limit=1000&agg=NONE`;
 
-    /* Table */
-    .table-box {
-      background: #1e293b;
-      margin-top: 1.5rem;
-      border-radius: 12px;
-      padding: 1rem;
-      overflow-x: auto;
-      box-shadow: 0 4px 12px rgba(0,0,0,.4);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      color: #e2e8f0;
-    }
-    th, td {
-      padding: 0.7rem 1rem;
-      text-align: center;
-    }
-    th {
-      background: #0f172a;
-      color: #38bdf8;
-    }
-    tr:nth-child(even) { background: #0f172a; }
-    tr:hover { background: #334155; }
+const res = await fetch(url, { headers: { "X-Authorization": `Bearer ${JWT}` }});
+if(!res.ok) throw new Error(res.statusText);
+const json = await res.json();
+return json;
+}
 
-    /* Chart + KPI Analysis */
-    .bottom-section {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 1rem;
-      margin-top: 1.5rem;
-    }
-    .chart-box, .analysis-box {
-      background: #1e293b;
-      border-radius: 12px;
-      padding: 1rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,.4);
-    }
-    .analysis-kpi {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1rem;
-    }
-    .circle {
-      text-align: center;
-      border-radius: 50%;
-      padding: 1.5rem;
-      background: radial-gradient(circle at top, #0ea5e9, #0f172a);
-      color: #fff;
-    }
-    .circle h2 { margin: 0; font-size: 2rem; }
-    .circle p { margin: 0.25rem 0 0; color: #94a3b8; }
+/* ====== MERGE SERIES BY TIMESTAMP ====== */
+function mergeSeries(obj){
+const map = new Map();
+for(const [key,arr] of Object.entries(obj)){
+ (arr||[]).forEach(p=>{
+   const t = +p.ts;
+   const row = map.get(t)||{ts:t};
+   row[key] = num(p.value);
+   map.set(t,row);
+ });
+}
+return Array.from(map.values()).sort((a,b)=>a.ts-b.ts);
+}
 
-    /* Footer */
-    .footer-note {
-      background: #14532d;
-      color: #22c55e;
-      border-radius: 8px;
-      padding: 0.7rem 1rem;
-      margin-top: 1.5rem;
-      font-size: 0.9rem;
-    }
+/* ====== RENDER UI ====== */
+function renderKpis(rows){
+const totalFabric = rows.reduce((s,r)=>s+num(r.Meter_Run_Hourly),0);
+const totalRuntime = rows.reduce((s,r)=>s+num(r.Runtime_Hourly),0);
+const totalDowntime = rows.reduce((s,r)=>s+num(r.Downtime_Hourly),0);
+const totalIdle = rows.reduce((s,r)=>s+num(r.Idletime_Hourly),0);
+const totalEnergy = rows.reduce((s,r)=>s+num(r.Consumption_Hourly),0);
+const avgOee = rows.length?rows.reduce((s,r)=>s+num(r.Oee_Hourly),0)/rows.length:0;
 
-    @media(max-width:900px){
-      .bottom-section { grid-template-columns: 1fr; }
-      .analysis-kpi { grid-template-columns: 1fr 1fr; }
-    }
-  </style>
-</head>
+document.getElementById("fabricProduced").textContent = totalFabric.toFixed(0) + " m";
+document.getElementById("runtime").textContent = totalRuntime.toFixed(1);
+document.getElementById("downtime").textContent = totalDowntime.toFixed(1);
+document.getElementById("idle").textContent = totalIdle.toFixed(1);
+document.getElementById("energy").textContent = totalEnergy.toFixed(1);
+document.getElementById("oee").textContent = avgOee.toFixed(1) + " %";
+}
 
-<body>
-<div class="page">
-  <!-- HEADER -->
-  <div class="header">
-    <h1>Montex Production & Energy Performance Report</h1>
-    <div class="subtext">Comprehensive shift-wise analysis with intelligence</div>
+/* ====== RENDER HOURLY TABLE ====== */
+function renderTable(rows){
+const tb=document.getElementById("hourlyTable");
+tb.innerHTML="";
+rows.forEach(r=>{
+ const tr=document.createElement("tr");
+ const cells=[
+   fmtTime(r.ts),
+   r.Meter_Run_Hourly?.toFixed(0),
+   r.Runtime_Hourly?.toFixed(1),
+   r.Downtime_Hourly?.toFixed(1),
+   r.Idletime_Hourly?.toFixed(1),
+   r.Consumption_Hourly?.toFixed(1),
+   r.Oee_Hourly?.toFixed(1)
+ ];
+ cells.forEach(v=>{
+   const td=document.createElement("td");
+   td.textContent=v??"—";
+   tr.appendChild(td);
+ });
+ tb.appendChild(tr);
+});
+}
 
-    <div class="filters">
-      <select id="period">
-        <option>This Month</option>
-        <option>Last Month</option>
-      </select>
-      <select id="shift">
-        <option>Shift A</option>
-        <option>Shift B</option>
-        <option>Shift C</option>
-      </select>
-      <select id="machine">
-        <option>Machine 01</option>
-        <option>Machine 02</option>
-      </select>
-      <button id="compare">Compare With Previous</button>
-      <div style="margin-left:auto;display:flex;gap:0.4rem">
-        <button class="export">Excel</button>
-        <button class="export">PDF</button>
-        <button class="export">CSV</button>
-        <button class="export">Presentation</button>
-      </div>
-    </div>
+/* ====== RENDER TREND CHART ====== */
+function renderChart(rows){
+if(!rows.length){ Plotly.purge("trendChart"); return; }
+const t=rows.map(r=>new Date(r.ts));
+const fabric=rows.map(r=>r.Meter_Run_Hourly);
+const runtime=rows.map(r=>r.Runtime_Hourly);
+const energy=rows.map(r=>r.Consumption_Hourly);
+const downtime=rows.map(r=>r.Downtime_Hourly);
+Plotly.newPlot("trendChart",[
+ {x:t,y:fabric,name:"Fabric",mode:"lines",line:{color:"#38bdf8"}},
+ {x:t,y:runtime,name:"Runtime",mode:"lines",line:{color:"#22c55e"}},
+ {x:t,y:downtime,name:"Downtime",mode:"lines",line:{color:"#ef4444"}},
+ {x:t,y:energy,name:"Energy",mode:"lines",line:{color:"#f59e0b"}}
+],{
+ paper_bgcolor:"#1e293b",
+ plot_bgcolor:"#1e293b",
+ font:{color:"#f1f5f9"},
+ margin:{l:40,r:20,t:30,b:30},
+ legend:{orientation:"h",y:-0.2}
+},{displaylogo:false,responsive:true});
+}
 
-    <div class="ai-banner">
-      <i class="fa-solid fa-brain"></i>
-      AI Insight: Shift B shows 7 % higher output than Shift A with 4 % better energy efficiency.
-    </div>
-  </div>
-
-  <!-- KPI CARDS -->
-  <div class="kpi-row">
-    <div class="kpi"><h3>Fabric Produced</h3><div class="value" id="fabricProduced">-</div></div>
-    <div class="kpi"><h3>Runtime (hrs)</h3><div class="value" id="runtime">-</div></div>
-    <div class="kpi"><h3>Downtime (hrs)</h3><div class="value" id="downtime">-</div></div>
-    <div class="kpi"><h3>Idle Time (hrs)</h3><div class="value" id="idle">-</div></div>
-    <div class="kpi"><h3>Energy Used (kWh)</h3><div class="value" id="energy">-</div></div>
-    <div class="kpi"><h3>Utilization (OEE %)</h3><div class="value" id="oee">-</div></div>
-  </div>
-
-  <!-- TABLE -->
-  <div class="table-box">
-    <table>
-      <thead>
-        <tr>
-          <th>Time</th><th>Fabric (m)</th><th>Runtime (h)</th><th>Downtime (h)</th>
-          <th>Idle (h)</th><th>Energy (kWh)</th><th>OEE (%)</th>
-        </tr>
-      </thead>
-      <tbody id="hourlyTable">
-        <tr><td colspan="7">Data will load after fetch</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- CHART + ANALYSIS -->
-  <div class="bottom-section">
-    <div class="chart-box">
-      <h3>Production Trend Visualization</h3>
-      <div id="trendChart" style="height:350px;"></div>
-    </div>
-
-    <div class="analysis-box">
-      <h3>KPI Analysis Board</h3>
-      <div class="analysis-kpi">
-        <div class="circle"><h2 id="kpiProductivity">-</h2><p>Fabric Productivity</p></div>
-        <div class="circle"><h2 id="kpiEfficiency">-</h2><p>Energy Efficiency</p></div>
-        <div class="circle"><h2 id="kpiOEE">-</h2><p>Utilization</p></div>
-        <div class="circle"><h2 id="kpiIntensity">-</h2><p>Energy Intensity</p></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- FOOTER -->
-  <div class="footer-note">
-    <i class="fa-solid fa-lightbulb"></i>
-    AI Note: Energy Efficiency improved 3.2 % since SMR due to optimized temperature control.
-  </div>
-</div>
-</body>
-</html>
+/* ===== MAIN FLOW ===== */
+async function init(){
+try{
+ const json=await fetchHourlyData();
+ const rows=mergeSeries(json);
+ renderKpis(rows);
+ renderTable(rows);
+ renderChart(rows);
+}catch(e){
+ console.error(e);
+ alert("Failed to load data: "+e.message);
+}
+}
+window.addEventListener("load",init);
+</script>
