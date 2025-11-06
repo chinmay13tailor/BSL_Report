@@ -19,8 +19,6 @@ body{font-family:"Segoe UI",sans-serif;background:#f3f4f6;color:#1e293b;margin:0
 .card h2{display:flex;align-items:center;gap:.6rem;font-size:1.1rem;color:#1e3a8a;
          margin-top:0;margin-bottom:1rem;}
 .card h2 i{color:#2563eb;}
-
-/* filter panel */
 .filter-group{display:flex;flex-wrap:wrap;align-items:center;gap:1rem;}
 label{font-weight:600;color:#1e3a8a;}
 input,select,button{padding:.5rem .8rem;border-radius:6px;border:1px solid #cbd5e1;
@@ -29,23 +27,16 @@ button{background:#2563eb;color:#fff;border:0;font-weight:600;cursor:pointer;}
 button:hover{background:#1d4ed8;}
 #generateBtn[disabled]{opacity:.6;cursor:not-allowed;}
 .status-label{font-size:.85rem;color:#475569;min-width:90px;}
-
-/* KPI summary */
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
          gap:1rem;}
 .kpi{background:#fff;border-radius:10px;padding:1rem;text-align:center;
      box-shadow:0 2px 8px rgba(0,0,0,0.08);}
 .kpi h3{margin:0;font-size:.95rem;color:#475569;}
 .kpi .value{font-size:1.4rem;font-weight:700;margin-top:.3rem;color:#2563eb;}
-
-/* table */
 table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;
       overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
 th,td{padding:.7rem .8rem;text-align:center;border-bottom:1px solid #e2e8f0;}
-th{background:#f1f5f9;color:#1e3a8a;}
-tbody tr:nth-child(even){background:#f9fafb;}
-
-/* detailed kpis */
+th{background:#f1f5f9;color:#1e3a8a;}tbody tr:nth-child(even){background:#f9fafb;}
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
           gap:1rem;}
 .kpi-detail{background:#f9fafb;border-radius:10px;padding:1rem;text-align:center;
@@ -54,11 +45,10 @@ tbody tr:nth-child(even){background:#f9fafb;}
 .kpi-detail .detail-value{font-size:1.6rem;font-weight:700;margin-top:.4rem;
                           color:#2563eb;}
 .kpi-detail p{color:#64748b;font-size:.85rem;margin-top:.3rem;}
-
-/* chart */
+.donut-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+           gap:1rem;margin-bottom:1.5rem;}
+.donut-box{text-align:center;}
 #trendChart{height:360px;}
-
-/* footer note */
 .footer-note{background:#dbeafe;color:#1e3a8a;padding:.8rem;border-radius:8px;
              font-size:.85rem;display:flex;align-items:center;gap:.5rem;}
 </style>
@@ -110,6 +100,13 @@ tbody tr:nth-child(even){background:#f9fafb;}
   <!-- Card 4: Detailed KPIs -->
   <div class="card">
     <h2><i class="fa-solid fa-microchip"></i> Detailed KPIs</h2>
+    <!-- Donuts -->
+    <div class="donut-row">
+      <div class="donut-box"><div id="donutPerformance"></div><div>Performance</div></div>
+      <div class="donut-box"><div id="donutAvailability"></div><div>Availability</div></div>
+      <div class="donut-box"><div id="donutQuality"></div><div>Quality</div></div>
+    </div>
+    <!-- KPI Tiles -->
     <div class="kpi-grid">
       <div class="kpi-detail"><h4>Avg Fabric Speed</h4>
         <div class="detail-value" id="avgSpeed">—</div><p>m/hr</p></div>
@@ -136,10 +133,14 @@ tbody tr:nth-child(even){background:#f9fafb;}
 </div>
 
 <script>
-const CONFIG={API_BASE_URL:"https://plantwiz.pimateck.in/api",
-  KEYS:["Meter_Run_Hourly","Consumption_Hourly","Runtime_Hourly",
-        "Downtime_Hourly","Idletime_Hourly","Oee_Hourly"],
-  DEFAULT_DEVICE_ID:"81261350-b886-11f0-87ea-b9809c1a7a9e"};
+const CONFIG={
+  API_BASE_URL:"https://plantwiz.pimateck.in/api",
+  KEYS:[
+    "Meter_Run_Hourly","Consumption_Hourly","Runtime_Hourly","Downtime_Hourly",
+    "Idletime_Hourly","Oee_Hourly","Performance_Hourly","Availability_Hourly","Quality_Hourly"
+  ],
+  DEFAULT_DEVICE_ID:"81261350-b886-11f0-87ea-b9809c1a7a9e"
+};
 const qs=new URLSearchParams(location.search);
 const JWT=qs.get("token")||"";const DEVICE_ID=CONFIG.DEFAULT_DEVICE_ID;
 
@@ -162,13 +163,18 @@ async function fetchHourlyData(startTs,endTs){
   const res=await fetch(url,{headers:{"X-Authorization":`Bearer ${JWT}`}});
   if(!res.ok)throw new Error(res.statusText);return res.json();
 }
-function mergeSeries(obj){const map=new Map();
-  for(const [key,arr]of Object.entries(obj)){
-    (arr||[]).forEach(p=>{const t=+p.ts;const row=map.get(t)||{ts:t};
-      row[key]=num(p.value);map.set(t,row);});
+
+function mergeSeries(obj){
+  const map=new Map();
+  for(const [key,arr] of Object.entries(obj)){
+    (arr||[]).forEach(p=>{
+      const t=+p.ts;const row=map.get(t)||{ts:t};
+      row[key]=num(p.value);map.set(t,row);
+    });
   }
   return Array.from(map.values()).sort((a,b)=>a.ts-b.ts);
 }
+
 function renderKpis(rows){
   const tF=rows.reduce((s,r)=>s+num(r.Meter_Run_Hourly),0),
         tR=rows.reduce((s,r)=>s+num(r.Runtime_Hourly),0),
@@ -192,6 +198,48 @@ function renderKpis(rows){
   shiftEfficiency.textContent=aO.toFixed(1)+"%";
   productionConsistency.textContent=consistency.toFixed(1)+"%";
 }
+
+function renderDonuts(rows){
+  const avgPerf=rows.length?rows.reduce((s,r)=>s+num(r.Performance_Hourly),0)/rows.length:0;
+  const avgAvail=rows.length?rows.reduce((s,r)=>s+num(r.Availability_Hourly),0)/rows.length:0;
+  const avgQual=rows.length?rows.reduce((s,r)=>s+num(r.Quality_Hourly),0)/rows.length:0;
+
+  const donuts=[
+    {id:"donutPerformance",label:"Performance",value:avgPerf,color:getDonutColor(avgPerf)},
+    {id:"donutAvailability",label:"Availability",value:avgAvail,color:getDonutColor(avgAvail)},
+    {id:"donutQuality",label:"Quality",value:avgQual,color:getDonutColor(avgQual)}
+  ];
+
+  donuts.forEach(d=>{
+    const pct=Math.min(d.value,100);
+    Plotly.newPlot(d.id,[{
+      values:[pct,100-pct],
+      labels:["",""],
+      type:"pie",
+      hole:.6,
+      marker:{colors:[d.color,"#e5e7eb"]},
+      textinfo:"none"
+    }],{
+      paper_bgcolor:"#ffffff",
+      height:180,
+      width:180,
+      annotations:[{
+        text:d.value.toFixed(1)+"%",
+        font:{size:18,color:"#1e293b"},
+        showarrow:false
+      }],
+      showlegend:false,
+      margin:{t:0,b:0,l:0,r:0}
+    },{displaylogo:false,responsive:true});
+  });
+}
+
+function getDonutColor(v){
+  if(v<70)return"#ef4444";
+  if(v<90)return"#f59e0b";
+  return"#22c55e";
+}
+
 function renderTable(rows){
   const tb=document.getElementById("hourlyTable");tb.innerHTML="";
   rows.forEach(r=>{
@@ -204,6 +252,7 @@ function renderTable(rows){
       td.textContent=v??"—";tr.appendChild(td);});tb.appendChild(tr);
   });
 }
+
 function renderChart(rows){
   if(!rows.length){Plotly.purge("trendChart");return;}
   const t=rows.map(r=>new Date(r.ts-3600000)),
@@ -220,6 +269,7 @@ function renderChart(rows){
      margin:{l:40,r:20,t:30,b:30},legend:{orientation:"h",y:-0.2}},
      {displaylogo:false,responsive:true});
 }
+
 async function generate(){
   const dateStr=dateInput.value;
   const shiftVal=shift.value.replace("Shift ","").trim();
@@ -230,13 +280,17 @@ async function generate(){
   try{
     const json=await fetchHourlyData(startTs,endTs);
     const rows=mergeSeries(json);
-    renderKpis(rows);renderTable(rows);renderChart(rows);
+    renderKpis(rows);
+    renderDonuts(rows);
+    renderTable(rows);
+    renderChart(rows);
     status.textContent="Generated ✅";
   }catch(e){console.error(e);
     alert("Failed to load data: "+e.message);
     status.textContent="Error ⚠️";}
   btn.disabled=false;
 }
+
 async function downloadPDF(){
   const{jsPDF}=window.jspdf;
   const element=document.getElementById("reportArea");
@@ -245,7 +299,8 @@ async function downloadPDF(){
   const pdf=new jsPDF("p","mm","a4");
   const pageWidth=210;const imgProps=pdf.getImageProperties(img);
   const imgHeight=imgProps.height*pageWidth/imgProps.width;
-  pdf.addImage(img,"PNG",0,0,pageWidth,imgHeight);
+  pdf.addconst imgWidth=pageWidth;const imgHeightScaled=imgProps.height*imgWidth/imgProps.width;
+  pdf.addImage(img,"PNG",0,0,imgWidth,imgHeightScaled);
   pdf.save("Montex_Report.pdf");
 }
 </script>
