@@ -2,123 +2,53 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Production & Energy Report</title>
-
-<!-- Plotly + PDF -->
+<title>Montex Production & Energy Performance Report</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <style>
-body {
-  font-family: "Segoe UI", sans-serif;
-  background: #f3f4f6;
-  color: #1e293b;
-  margin: 0;
-  padding: 1.5rem;
-}
-.card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 1.2rem 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-}
-h2 {
-  display: flex;
-  align-items: center;
-  gap: .6rem;
-  font-size: 1.1rem;
-  color: #1e3a8a;
-  margin-top: 0;
-  margin-bottom: 1rem;
-}
-h2 i { color: #2563eb; }
-.filter-group {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1rem;
-}
-label { font-weight: 600; color: #1e3a8a; }
-input, select, button {
-  padding: .5rem .8rem;
-  border-radius: 6px;
-  border: 1px solid #cbd5e1;
-  background: #f8fafc;
-  color: #1e293b;
-  font-size: .9rem;
-}
-button {
-  background: #2563eb;
-  color: #fff;
-  border: 0;
-  font-weight: 600;
-  cursor: pointer;
-}
-button:hover { background: #1d4ed8; }
-.status-label {
-  font-size: .85rem;
-  color: #475569;
-  min-width: 90px;
-}
-.kpi-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-}
-.kpi {
-  background: #fff;
-  border-radius: 10px;
-  padding: 1rem;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-.kpi h3 { margin: 0; font-size: .95rem; color: #475569; }
-.kpi .value { font-size: 1.4rem; font-weight: 700; margin-top: .3rem; color: #2563eb; }
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-th, td {
-  padding: .7rem .8rem;
-  text-align: center;
-  border-bottom: 1px solid #e2e8f0;
-}
-th { background: #f1f5f9; color: #1e3a8a; }
-tbody tr:nth-child(even) { background: #f9fafb; }
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-}
-.kpi-detail {
-  background: #f9fafb;
-  border-radius: 10px;
-  padding: 1rem;
-  text-align: center;
-  border: 1px solid #e2e8f0;
-}
-.kpi-detail h4 { margin: 0; font-size: 1rem; color: #475569; }
-.kpi-detail .detail-value {
-  font-size: 1.6rem; font-weight: 700; margin-top: .4rem; color: #2563eb;
-}
-#trendChart { height: 360px; }
-.donut-row { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 1rem; }
-.donut-chart { width: 220px; height: 220px; }
+body{font-family:"Segoe UI",sans-serif;background:#f3f4f6;color:#1e293b;margin:0;}
+.page{padding:1.5rem;}
+.card{background:#fff;border-radius:12px;padding:1.2rem 1.5rem;margin-bottom:1.5rem;
+      box-shadow:0 2px 10px rgba(0,0,0,0.08);}
+.card h2{display:flex;align-items:center;gap:.6rem;font-size:1.1rem;color:#1e3a8a;
+         margin-top:0;margin-bottom:1rem;}
+.card h2 i{color:#2563eb;}
+.filter-group{display:flex;flex-wrap:wrap;align-items:center;gap:1rem;}
+label{font-weight:600;color:#1e3a8a;}
+input,select,button{padding:.5rem .8rem;border-radius:6px;border:1px solid #cbd5e1;
+                    background:#f8fafc;color:#1e293b;font-size:.9rem;}
+button{background:#2563eb;color:#fff;border:0;font-weight:600;cursor:pointer;}
+button:hover{background:#1d4ed8;}
+#generateBtn[disabled]{opacity:.6;cursor:not-allowed;}
+.status-label{font-size:.85rem;color:#475569;min-width:90px;}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+         gap:1rem;}
+.kpi{background:#fff;border-radius:10px;padding:1rem;text-align:center;
+     box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+.kpi h3{margin:0;font-size:.95rem;color:#475569;}
+.kpi .value{font-size:1.4rem;font-weight:700;margin-top:.3rem;color:#2563eb;}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;
+      overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+th,td{padding:.7rem .8rem;text-align:center;border-bottom:1px solid #e2e8f0;}
+th{background:#f1f5f9;color:#1e3a8a;}
+tbody tr:nth-child(even){background:#f9fafb;}
+#trendChart{height:360px;}
+.donut-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;text-align:center;margin-bottom:1.5rem;}
+.donut-box{background:#f9fafb;border-radius:10px;padding:1rem;border:1px solid #e2e8f0;}
+.detail-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;}
+.detail-box{background:#f9fafb;border-radius:10px;padding:1rem;border:1px solid #e2e8f0;text-align:center;}
+.detail-box h4{margin:.3rem 0;color:#475569;}
+.detail-box .icon{font-size:1.3rem;color:#2563eb;margin-bottom:.3rem;}
+.detail-value{font-size:1.4rem;font-weight:700;color:#2563eb;}
 </style>
 </head>
-
 <body>
-<div id="reportArea">
+<div class="page" id="reportArea">
 
-  <!-- Filters -->
   <div class="card">
     <h2><i class="fa-solid fa-sliders"></i> Report Filters</h2>
     <div class="filter-group">
@@ -133,7 +63,6 @@ tbody tr:nth-child(even) { background: #f9fafb; }
     </div>
   </div>
 
-  <!-- KPI Summary -->
   <div class="card">
     <h2><i class="fa-solid fa-gauge-high"></i> KPI Summary</h2>
     <div class="kpi-row">
@@ -146,29 +75,32 @@ tbody tr:nth-child(even) { background: #f9fafb; }
     </div>
   </div>
 
-  <!-- Hourly Table -->
+  <div class="card">
+    <h2><i class="fa-solid fa-chart-pie"></i> Performance KPIs</h2>
+    <div class="donut-row">
+      <div id="perfDonut" class="donut-box"></div>
+      <div id="availDonut" class="donut-box"></div>
+      <div id="qualDonut" class="donut-box"></div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-box"><div class="icon"><i class="fa-solid fa-gauge-high"></i></div><h4>Avg Fabric Speed</h4><div class="detail-value" id="avgSpeed">—</div></div>
+      <div class="detail-box"><div class="icon"><i class="fa-solid fa-bolt"></i></div><h4>Energy per Meter</h4><div class="detail-value" id="energyPerMeter">—</div></div>
+      <div class="detail-box"><div class="icon"><i class="fa-solid fa-chart-line"></i></div><h4>Shift Efficiency</h4><div class="detail-value" id="shiftEfficiency">—</div></div>
+      <div class="detail-box"><div class="icon"><i class="fa-solid fa-wave-square"></i></div><h4>Production Consistency</h4><div class="detail-value" id="productionConsistency">—</div></div>
+    </div>
+  </div>
+
   <div class="card">
     <h2><i class="fa-solid fa-clock"></i> Hourly Data</h2>
     <table>
       <thead><tr>
-        <th>Time</th><th>Fabric (m)</th><th>Runtime (h)</th>
-        <th>Downtime (h)</th><th>Idle (h)</th><th>Energy (kWh)</th><th>OEE (%)</th>
+        <th>Time</th><th>Fabric (m)</th><th>Runtime (h)</th><th>Downtime (h)</th>
+        <th>Idle (h)</th><th>Energy (kWh)</th><th>OEE (%)</th>
       </tr></thead>
       <tbody id="hourlyTable"><tr><td colspan="7">Awaiting data...</td></tr></tbody>
     </table>
   </div>
 
-  <!-- Detailed KPI Donuts -->
-  <div class="card">
-    <h2><i class="fa-solid fa-chart-pie"></i> Performance KPIs</h2>
-    <div class="donut-row">
-      <div id="donutPerformance" class="donut-chart"></div>
-      <div id="donutAvailability" class="donut-chart"></div>
-      <div id="donutQuality" class="donut-chart"></div>
-    </div>
-  </div>
-
-  <!-- Trend -->
   <div class="card">
     <h2><i class="fa-solid fa-chart-line"></i> Production & Energy Trend</h2>
     <div id="trendChart"></div>
@@ -177,75 +109,63 @@ tbody tr:nth-child(even) { background: #f9fafb; }
 </div>
 
 <script>
-const CONFIG = {
-  API_BASE_URL: "https://plantwiz.pimateck.in/api",
-  KEYS: ["Meter_Run_Hourly","Consumption_Hourly","Runtime_Hourly",
-         "Downtime_Hourly","Idletime_Hourly","Oee_Hourly",
-         "Performance_Hourly","Availability_Hourly","Quality_Hourly"],
-  DEFAULT_DEVICE_ID: "81261350-b886-11f0-87ea-b9809c1a7a9e"
+const CONFIG={
+  API_BASE_URL:"https://plantwiz.pimateck.in/api",
+  KEYS:[
+    "Meter_Run_Hourly","Consumption_Hourly","Runtime_Hourly",
+    "Downtime_Hourly","Idletime_Hourly","Oee_Hourly",
+    "Performance_Hourly","Availability_Hourly","Quality_Hourly"
+  ],
+  DEFAULT_DEVICE_ID:"81261350-b886-11f0-87ea-b9809c1a7a9e"
 };
-const JWT = new URLSearchParams(location.search).get("token") || "";
-const DEVICE_ID = CONFIG.DEFAULT_DEVICE_ID;
-
+const qs=new URLSearchParams(location.search);
+const JWT=qs.get("token")||"";const DEVICE_ID=CONFIG.DEFAULT_DEVICE_ID;
 function num(v){const n=Number(v);return Number.isFinite(n)?n:0;}
-function fmtTime(ts){const c=ts-3600000;return new Date(c).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});}
+function fmtTime(ts){const corrected=ts-3600000;
+  return new Date(corrected).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});}
 function getShiftRange(dateStr,shift){
-  const d=new Date(dateStr);let s=new Date(d),e=new Date(d);
-  if(shift==="A"){s.setHours(0,0,0,0);e.setHours(8,0,0,0);}
-  else if(shift==="B"){s.setHours(8,0,0,0);e.setHours(16,0,0,0);}
-  else if(shift==="C"){s.setHours(16,0,0,0);e.setHours(23,59,59,999);}
-  else{s.setHours(0,0,0,0);e.setHours(23,59,59,999);}
-  const offset=s.getTimezoneOffset()*60*1000;
-  return {startTs:s.getTime()-offset,endTs:e.getTime()-offset};
+  const date=new Date(dateStr);let start=new Date(date),end=new Date(date);
+  if(shift==="A"){start.setHours(0,0,0,0);end.setHours(8,0,0,0);}
+  else if(shift==="B"){start.setHours(8,0,0,0);end.setHours(16,0,0,0);}
+  else if(shift==="C"){start.setHours(16,0,0,0);end.setHours(23,59,59,999);}
+  else{start.setHours(0,0,0,0);end.setHours(23,59,59,999);}
+  const offset=start.getTimezoneOffset()*60*1000;
+  return{startTs:start.getTime()-offset,endTs:end.getTime()-offset};
 }
 async function fetchHourlyData(startTs,endTs){
   const url=`${CONFIG.API_BASE_URL}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=${CONFIG.KEYS.join(",")}&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`;
   const res=await fetch(url,{headers:{"X-Authorization":`Bearer ${JWT}`}});
-  if(!res.ok)throw new Error(res.statusText);
-  return res.json();
+  if(!res.ok)throw new Error(res.statusText);return res.json();
 }
-function mergeSeries(obj){
-  const map=new Map();
-  for(const [key,arr] of Object.entries(obj)){
-    (arr||[]).forEach(p=>{
-      const t=+p.ts;
-      const row=map.get(t)||{ts:t};
-      row[key]=num(p.value);
-      map.set(t,row);
-    });
+function mergeSeries(obj){const map=new Map();
+  for(const [key,arr]of Object.entries(obj)){
+    (arr||[]).forEach(p=>{const t=+p.ts;const row=map.get(t)||{ts:t};
+      row[key]=num(p.value);map.set(t,row);});
   }
   return Array.from(map.values()).sort((a,b)=>a.ts-b.ts);
 }
-function renderDonut(id,label,value){
-  const capped = Math.min(value,100);
-  let color = value<70?"#ef4444":value<90?"#f59e0b":"#22c55e";
-  Plotly.newPlot(id,[{
-    values:[capped,100-capped],
-    labels:["",""],
-    hole:.6,
-    marker:{colors:[color,"#e5e7eb"]},
-    textinfo:"none",
-    type:"pie",
-    showlegend:false
-  }],{
-    annotations:[{text:`${value.toFixed(1)}%<br><span style='font-size:0.8em;color:#475569;'>${label}</span>`,
-      showarrow:false,font:{size:18,color:"#1e293b"}}],
-    margin:{t:10,b:10,l:10,r:10},
-    paper_bgcolor:"#fff",plot_bgcolor:"#fff"
-  },{displaylogo:false,responsive:true});
-}
 function renderKpis(rows){
-  const sum = (k)=>rows.reduce((s,r)=>s+num(r[k]),0);
-  const avg = (k)=>rows.length?sum(k)/rows.length:0;
-  fabricProduced.textContent=sum("Meter_Run_Hourly").toFixed(0)+" m";
-  runtime.textContent=sum("Runtime_Hourly").toFixed(1);
-  downtime.textContent=sum("Downtime_Hourly").toFixed(1);
-  idle.textContent=sum("Idletime_Hourly").toFixed(1);
-  energy.textContent=sum("Consumption_Hourly").toFixed(1);
-  oee.textContent=avg("Oee_Hourly").toFixed(1)+"%";
-  renderDonut("donutPerformance","Performance",avg("Performance_Hourly"));
-  renderDonut("donutAvailability","Availability",avg("Availability_Hourly"));
-  renderDonut("donutQuality","Quality",avg("Quality_Hourly"));
+  const tF=rows.reduce((s,r)=>s+num(r.Meter_Run_Hourly),0),
+        tR=rows.reduce((s,r)=>s+num(r.Runtime_Hourly),0),
+        tD=rows.reduce((s,r)=>s+num(r.Downtime_Hourly),0),
+        tI=rows.reduce((s,r)=>s+num(r.Idletime_Hourly),0),
+        tE=rows.reduce((s,r)=>s+num(r.Consumption_Hourly),0),
+        aO=rows.length?rows.reduce((s,r)=>s+num(r.Oee_Hourly),0)/rows.length:0;
+  fabricProduced.textContent=tF.toFixed(0)+" m";
+  runtime.textContent=tR.toFixed(1);
+  downtime.textContent=tD.toFixed(1);
+  idle.textContent=tI.toFixed(1);
+  energy.textContent=tE.toFixed(1);
+  oee.textContent=aO.toFixed(1)+"%";
+  const avgSpeedVal=tR>0?(tF/tR):0,energyPerMeterVal=tF>0?(tE/tF):0;
+  const prodList=rows.map(r=>r.Meter_Run_Hourly).filter(x=>x>0);
+  const mean=prodList.reduce((s,x)=>s+x,0)/prodList.length;
+  const sd=Math.sqrt(prodList.reduce((s,x)=>s+(x-mean)**2,0)/prodList.length);
+  const consistency=mean?(sd/mean*100):0;
+  avgSpeed.textContent=avgSpeedVal.toFixed(1);
+  energyPerMeter.textContent=energyPerMeterVal.toFixed(3);
+  shiftEfficiency.textContent=aO.toFixed(1)+"%";
+  productionConsistency.textContent=consistency.toFixed(1)+"%";
 }
 function renderTable(rows){
   const tb=document.getElementById("hourlyTable");tb.innerHTML="";
@@ -255,9 +175,26 @@ function renderTable(rows){
       r.Runtime_Hourly?.toFixed(1),r.Downtime_Hourly?.toFixed(1),
       r.Idletime_Hourly?.toFixed(1),r.Consumption_Hourly?.toFixed(1),
       r.Oee_Hourly?.toFixed(1)];
-    cells.forEach(v=>{const td=document.createElement("td");td.textContent=v??"—";tr.appendChild(td);});
-    tb.appendChild(tr);
+    cells.forEach(v=>{const td=document.createElement("td");
+      td.textContent=v??"—";tr.appendChild(td);});tb.appendChild(tr);
   });
+}
+function renderDonut(id,label,value){
+  const color=value>=90?"#22c55e":value>=70?"#f59e0b":"#ef4444";
+  const capped=Math.min(100,value);
+  Plotly.newPlot(id,[{
+    values:[capped,100-capped],labels:[`${value.toFixed(1)}%`,`Remaining`],
+    marker:{colors:[color,"#e5e7eb"]},hole:.65,type:"pie",textinfo:"none"}],
+    {showlegend:false,title:{text:label,font:{size:16,color:"#1e3a8a"}},
+     margin:{t:40,b:10,l:10,r:10},annotations:[{
+       text:`${value.toFixed(1)}%`,showarrow:false,font:{size:20,color:"#1e293b"}}]},
+    {displaylogo:false,responsive:true});
+}
+function renderAllDonuts(rows){
+  const avg=(key)=>rows.length?rows.reduce((s,r)=>s+num(r[key]),0)/rows.length:0;
+  renderDonut("perfDonut","Performance",avg("Performance_Hourly"));
+  renderDonut("availDonut","Availability",avg("Availability_Hourly"));
+  renderDonut("qualDonut","Quality",avg("Quality_Hourly"));
 }
 function renderChart(rows){
   if(!rows.length){Plotly.purge("trendChart");return;}
@@ -271,37 +208,37 @@ function renderChart(rows){
     {x:t,y:r,name:"Runtime",mode:"lines",line:{color:"#22c55e"}},
     {x:t,y:d,name:"Downtime",mode:"lines",line:{color:"#ef4444"}},
     {x:t,y:e,name:"Energy",mode:"lines",line:{color:"#f59e0b"}}
-  ],{paper_bgcolor:"#fff",plot_bgcolor:"#fff",font:{color:"#1e293b"},
+  ],{paper_bgcolor:"#ffffff",plot_bgcolor:"#ffffff",font:{color:"#1e293b"},
      margin:{l:40,r:20,t:30,b:30},legend:{orientation:"h",y:-0.2}},
      {displaylogo:false,responsive:true});
 }
 async function generate(){
-  const dateStr=dateInput.value;const shiftVal=shift.value.replace("Shift ","").trim();
+  const dateStr=dateInput.value;
+  const shiftVal=shift.value.replace("Shift ","").trim();
   const btn=generateBtn,status=statusLabel;
   if(!dateStr){alert("Please select a date.");return;}
   btn.disabled=true;status.textContent="Generating ...";
-  const {startTs,endTs}=getShiftRange(dateStr,shiftVal);
+  const{startTs,endTs}=getShiftRange(dateStr,shiftVal);
   try{
     const json=await fetchHourlyData(startTs,endTs);
     const rows=mergeSeries(json);
-    renderKpis(rows);renderTable(rows);renderChart(rows);
+    renderKpis(rows);renderAllDonuts(rows);renderTable(rows);renderChart(rows);
     status.textContent="Generated ✅";
-  }catch(e){
-    console.error(e);alert("Failed to load data: "+e.message);
-    status.textContent="Error ⚠️";
-  }
+  }catch(e){console.error(e);
+    alert("Failed to load data: "+e.message);
+    status.textContent="Error ⚠️";}
   btn.disabled=false;
 }
 async function downloadPDF(){
-  const {jsPDF}=window.jspdf;
-  const el=document.getElementById("reportArea");
-  const canvas=await html2canvas(el,{scale:2});
+  const{jsPDF}=window.jspdf;
+  const element=document.getElementById("reportArea");
+  const canvas=await html2canvas(element,{scale:2});
   const img=canvas.toDataURL("image/png");
   const pdf=new jsPDF("p","mm","a4");
-  const pageWidth=210,imgProps=pdf.getImageProperties(img);
+  const pageWidth=210;const imgProps=pdf.getImageProperties(img);
   const imgHeight=imgProps.height*pageWidth/imgProps.width;
   pdf.addImage(img,"PNG",0,0,pageWidth,imgHeight);
-  pdf.save("Production_Report.pdf");
+  pdf.save("Montex_Report.pdf");
 }
 </script>
 </body>
