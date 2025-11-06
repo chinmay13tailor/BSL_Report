@@ -290,24 +290,42 @@ const CONFIG = {
     "Idletime_Hourly",
     "Oee_Hourly"
   ],
-  DEFAULT_DEVICE_ID: "81261350-b886-11f0-87ea-b9809c1a7a9e"   // ✅ your fixed device ID
+  DEFAULT_DEVICE_ID: "81261350-b886-11f0-87ea-b9809c1a7a9e"
 };
 
 const qs = new URLSearchParams(location.search);
 const JWT = qs.get("token") || "";
 const URL_DEVICE = qs.get("deviceId") || "";
-const DEVICE_ID = URL_DEVICE || CONFIG.DEFAULT_DEVICE_ID;      // ✅ fallback to default
-
+const DEVICE_ID = URL_DEVICE || CONFIG.DEFAULT_DEVICE_ID;
 if (!JWT) alert("Missing token in URL (device ID is set to default).");
 
+/* ================== Helpers ================== */
 function num(v){ const n = Number(v); return Number.isFinite(n)?n:0; }
 function fmtTime(ts){ return new Date(ts).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}); }
 
-async function fetchHourlyData(){
-  const end = Date.now();
-  const start = end - 24*3600*1000;  // last 24 hours
+/* Convert date + shift into start/end timestamps */
+function getShiftRange(dateStr, shift) {
+  const date = new Date(dateStr);
+  let start = new Date(date);
+  let end = new Date(date);
+
+  if (shift === "A") {            // 00:00 – 08:00
+    start.setHours(0,0,0,0);
+    end.setHours(8,0,0,0);
+  } else if (shift === "B") {     // 08:00 – 16:00
+    start.setHours(8,0,0,0);
+    end.setHours(16,0,0,0);
+  } else if (shift === "C") {     // 16:00 – 23:59:59
+    start.setHours(16,0,0,0);
+    end.setHours(23,59,59,999);
+  }
+  return { startTs: start.getTime(), endTs: end.getTime() };
+}
+
+/* ================== Fetch ThingsBoard ================== */
+async function fetchHourlyData(startTs, endTs) {
   const url = `${CONFIG.API_BASE_URL}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries`
-            + `?keys=${CONFIG.KEYS.join(",")}&startTs=${start}&endTs=${end}&limit=1000&agg=NONE`;
+    + `?keys=${CONFIG.KEYS.join(",")}&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`;
   const res = await fetch(url, { headers: { "X-Authorization": `Bearer ${JWT}` }});
   if(!res.ok) throw new Error(res.statusText);
   return res.json();
@@ -326,6 +344,7 @@ function mergeSeries(obj){
   return Array.from(map.values()).sort((a,b)=>a.ts-b.ts);
 }
 
+/* ================== Rendering ================== */
 function renderKpis(rows){
   const totalFabric = rows.reduce((s,r)=>s+num(r.Meter_Run_Hourly),0);
   const totalRuntime = rows.reduce((s,r)=>s+num(r.Runtime_Hourly),0);
@@ -341,10 +360,8 @@ function renderKpis(rows){
   document.getElementById("energy").textContent = totalEnergy.toFixed(1);
   document.getElementById("oee").textContent = avgOee.toFixed(1) + " %";
 
-  // Derived KPIs
   const avgSpeed = totalRuntime>0 ? (totalFabric / totalRuntime) : 0;
   const energyPerMeter = totalFabric>0 ? (totalEnergy / totalFabric) : 0;
-  const shiftEfficiency = avgOee.toFixed(1);
   const prodList = rows.map(r=>r.Meter_Run_Hourly).filter(x=>x>0);
   const mean = prodList.reduce((s,x)=>s+x,0)/prodList.length;
   const sd = Math.sqrt(prodList.reduce((s,x)=>s+(x-mean)**2,0)/prodList.length);
@@ -352,7 +369,7 @@ function renderKpis(rows){
 
   document.getElementById("avgSpeed").textContent = avgSpeed.toFixed(1);
   document.getElementById("energyPerMeter").textContent = energyPerMeter.toFixed(3);
-  document.getElementById("shiftEfficiency").textContent = shiftEfficiency + " %";
+  document.getElementById("shiftEfficiency").textContent = avgOee.toFixed(1) + " %";
   document.getElementById("productionConsistency").textContent = consistency.toFixed(1) + " %";
 }
 
@@ -400,9 +417,16 @@ function renderChart(rows){
   },{displaylogo:false,responsive:true});
 }
 
-async function init(){
+/* ================== Main ================== */
+async function generate(){
+  const dateStr = document.getElementById("dateInput").value;
+  const shiftVal = document.getElementById("shift").value.replace("Shift ","").trim(); // A/B/C
+
+  if(!dateStr){ alert("Please select a date."); return; }
+
+  const {startTs, endTs} = getShiftRange(dateStr, shiftVal);
   try{
-    const json=await fetchHourlyData();
+    const json=await fetchHourlyData(startTs,endTs);
     const rows=mergeSeries(json);
     renderKpis(rows);
     renderTable(rows);
@@ -412,8 +436,17 @@ async function init(){
     alert("Failed to load data: "+e.message);
   }
 }
-window.addEventListener("load",init);
+
+window.addEventListener("load",()=>{
+  // add a date picker if not exists
+  if(!document.getElementById("dateInput")){
+    const div=document.createElement("div");
+    div.innerHTML=`<label>Select Date:</label> <input type="date" id="dateInput" style="background:#1e293b;color:#f1f5f9;border:1px solid #334155;border-radius:6px;padding:4px 8px;"> <button onclick="generate()" style="background:#38bdf8;border:none;color:#000;padding:6px 10px;border-radius:6px;font-weight:600;cursor:pointer;">Generate</button>`;
+    document.querySelector(".filters").prepend(div);
+  }
+});
 </script>
+
 
 </body>
 </html>
