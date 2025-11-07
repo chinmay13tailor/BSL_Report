@@ -77,6 +77,43 @@ tbody tr:nth-child(even){background:#f9fafb}
 /* hide helpers */
 .hide-for-pdf{display:block}
 .pdf-mode .hide-for-pdf{display:none !important}
+
+  /* === PDF boxed sections for every card === */
+.pdf-mode .card{
+  border: 1.2px solid #d1d5db !important;     /* visible outline in PDF */
+  box-shadow: none !important;                 /* cleaner print look */
+  background: #ffffff !important;              /* ensure white card */
+  border-radius: 12px !important;
+  padding: 14px 16px !important;               /* a bit tighter for print */
+  margin-bottom: 14px !important;
+  page-break-inside: avoid !important;         /* keep a section together */
+}
+
+/* Slightly tighter headers for print */
+.pdf-mode .card h2{
+  margin-bottom: 10px !important;
+}
+
+/* Tables look cleaner in print */
+.pdf-mode table{
+  border: 1px solid #e5e7eb;
+}
+.pdf-mode th, 
+.pdf-mode td{
+  padding: 8px 10px !important;
+}
+
+/* Chart container spacing for print */
+.pdf-mode #trendChart{
+  height: 340px !important;
+}
+
+/* Make the page background white behind cards */
+.pdf-mode .page{
+  background: #ffffff !important;
+  padding: 14px !important;
+}
+
 </style>
 </head>
 <body>
