@@ -143,10 +143,12 @@ const JWT=qs.get("token")||"";const DEVICE_ID=CONFIG.DEFAULT_DEVICE_ID;
 function num(v){const n=Number(v);return Number.isFinite(n)?n:0;}
 function fmtTime(ts){const corrected=ts-3600000;
   return new Date(corrected).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});}
+
 // ✅ Correct IST fix – fetch data starting from 00:00 IST
 function getShiftRange(dateStr, shift) {
   const date = new Date(dateStr);
-  let start = new Date(date), end = new Date(date);
+  let start = new Date(date);
+  let end = new Date(date);
 
   if (shift === "A") {
     start.setHours(0, 0, 0, 0);
@@ -170,16 +172,6 @@ function getShiftRange(dateStr, shift) {
   };
 }
 
-// ✅ Final correct IST alignment: subtract offset from local time
-// This ensures we fetch data starting from 00:00 IST, not 05:00 AM
-const IST_OFFSET = 5.5 * 60 * 60 * 1000;
-return { 
-  startTs: start.getTime() - IST_OFFSET, 
-  endTs: end.getTime() - IST_OFFSET 
-};
-
-
-}
 async function fetchHourlyData(startTs,endTs){
   const url=`${CONFIG.API_BASE_URL}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=${CONFIG.KEYS.join(",")}&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`;
   const res=await fetch(url,{headers:{"X-Authorization":`Bearer ${JWT}`}});
