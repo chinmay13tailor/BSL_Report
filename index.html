@@ -152,8 +152,8 @@ function getShiftRange(dateStr,shift){
 // Convert to IST timestamps (UTC +5:30)
 const IST_OFFSET = 5.5 * 60 * 60 * 1000;
 return { 
-  startTs: start.getTime() - IST_OFFSET, 
-  endTs: end.getTime() - IST_OFFSET 
+  startTs: start.getTime() + IST_OFFSET, 
+  endTs: end.getTime() + IST_OFFSET 
 };
 
 }
