@@ -37,8 +37,28 @@ th,td{padding:.7rem .8rem;text-align:center;border-bottom:1px solid #e2e8f0;}
 th{background:#f1f5f9;color:#1e3a8a;}
 tbody tr:nth-child(even){background:#f9fafb;}
 #trendChart{height:360px;}
-.donut-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;text-align:center;margin-bottom:1.5rem;}
-.donut-box{background:#f9fafb;border-radius:10px;padding:1rem;border:1px solid #e2e8f0;}
+/* ---- donuts ---- */
+.donut-row{
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:1rem;
+  margin-bottom:1.5rem;
+}
+.donut-box{
+  background:#f9fafb;
+  border-radius:12px;
+  padding:0.5rem;
+  border:1px solid #e2e8f0;
+  width:220px;
+  height:220px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
+}
+/* ---- detail boxes ---- */
 .detail-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;}
 .detail-box{background:#f9fafb;border-radius:10px;padding:1rem;border:1px solid #e2e8f0;text-align:center;}
 .detail-box h4{margin:.3rem 0;color:#475569;}
@@ -183,12 +203,18 @@ function renderDonut(id,label,value){
   const color=value>=90?"#22c55e":value>=70?"#f59e0b":"#ef4444";
   const capped=Math.min(100,value);
   Plotly.newPlot(id,[{
-    values:[capped,100-capped],labels:[`${value.toFixed(1)}%`,`Remaining`],
-    marker:{colors:[color,"#e5e7eb"]},hole:.65,type:"pie",textinfo:"none"}],
-    {showlegend:false,title:{text:label,font:{size:16,color:"#1e3a8a"}},
-     margin:{t:40,b:10,l:10,r:10},annotations:[{
-       text:`${value.toFixed(1)}%`,showarrow:false,font:{size:20,color:"#1e293b"}}]},
-    {displaylogo:false,responsive:true});
+    values:[capped,100-capped],
+    marker:{colors:[color,"#e5e7eb"]},
+    hole:.65,type:"pie",textinfo:"none"
+  }],
+  {
+    showlegend:false,
+    title:{text:label,font:{size:14,color:"#1e3a8a"}},
+    margin:{t:30,b:30,l:30,r:30},
+    height:200,width:200,
+    annotations:[{text:`${value.toFixed(1)}%`,showarrow:false,font:{size:18,color:"#1e293b"}}]
+  },
+  {displaylogo:false,responsive:false});
 }
 function renderAllDonuts(rows){
   const avg=(key)=>rows.length?rows.reduce((s,r)=>s+num(r[key]),0)/rows.length:0;
