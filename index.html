@@ -146,12 +146,14 @@ function fmtTime(ts){const corrected=ts-3600000;
 
 
 // ✅ Fetch data aligned to Indian Standard Time (UTC+5:30)
+// ✅ Always fetch data aligned to Indian Standard Time (GMT+5:30)
 function getShiftRange(dateStr, shift) {
-  const date = new Date(dateStr);
+  // Parse local date as IST midnight
+  const date = new Date(dateStr + "T00:00:00+05:30");
   let start = new Date(date);
   let end = new Date(date);
 
-  // Define local IST shift hours
+  // Define local (IST) shift windows
   if (shift === "A") {
     start.setHours(0, 0, 0, 0);
     end.setHours(8, 0, 0, 0);
@@ -166,11 +168,9 @@ function getShiftRange(dateStr, shift) {
     end.setHours(23, 59, 59, 999);
   }
 
-  // ✅ Convert local (IST) time to UTC timestamps for the API
-  // Add 5h30m to align with GMT+5:30
-  const IST_OFFSET = 5.5 * 60 * 60 * 1000;
-  const startTs = start.getTime() + IST_OFFSET;
-  const endTs = end.getTime() + IST_OFFSET;
+  // ✅ Convert IST times to UTC timestamps
+  const startTs = start.getTime() - (5.5 * 60 * 60 * 1000);
+  const endTs = end.getTime() - (5.5 * 60 * 60 * 1000);
 
   return { startTs, endTs };
 }
