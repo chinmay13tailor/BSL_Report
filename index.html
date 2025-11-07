@@ -149,8 +149,13 @@ function getShiftRange(dateStr,shift){
   else if(shift==="B"){start.setHours(8,0,0,0);end.setHours(16,0,0,0);}
   else if(shift==="C"){start.setHours(16,0,0,0);end.setHours(23,59,59,999);}
   else{start.setHours(0,0,0,0);end.setHours(23,59,59,999);}
-  const offset=start.getTimezoneOffset()*60*1000;
-  return{startTs:start.getTime()-offset,endTs:end.getTime()-offset};
+// Convert to IST timestamps (UTC +5:30)
+const IST_OFFSET = 5.5 * 60 * 60 * 1000;
+return { 
+  startTs: start.getTime() - IST_OFFSET, 
+  endTs: end.getTime() - IST_OFFSET 
+};
+
 }
 async function fetchHourlyData(startTs,endTs){
   const url=`${CONFIG.API_BASE_URL}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=${CONFIG.KEYS.join(",")}&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`;
