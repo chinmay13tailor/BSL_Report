@@ -25,41 +25,40 @@ button{background:#2563eb;color:#fff;border:0;font-weight:600;cursor:pointer;}
 button:hover{background:#1d4ed8;}
 #generateBtn[disabled]{opacity:.6;cursor:not-allowed;}
 .status-label{font-size:.85rem;color:#475569;min-width:90px;}
-.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-         gap:1rem;}
+
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;}
 .kpi{background:#fff;border-radius:10px;padding:1rem;text-align:center;
      box-shadow:0 2px 8px rgba(0,0,0,0.08);}
 .kpi h3{margin:0;font-size:.95rem;color:#475569;}
 .kpi .value{font-size:1.4rem;font-weight:700;margin-top:.3rem;color:#2563eb;}
+
 table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;
       overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
 th,td{padding:.7rem .8rem;text-align:center;border-bottom:1px solid #e2e8f0;}
 th{background:#f1f5f9;color:#1e3a8a;}
 tbody tr:nth-child(even){background:#f9fafb;}
-#trendChart{height:360px;}
-/* ---- donuts ---- */
-.donut-row{
-  display:flex;
-  justify-content:space-around;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:1rem;
-  margin-bottom:1.5rem;
+#trendChart{height:380px;}
+
+/* ---- unified donut panel ---- */
+.donut-panel{
+  background:#f9fafb;border:1px solid #e2e8f0;border-radius:12px;
+  padding:1rem 1rem 0.5rem; box-shadow:0 2px 6px rgba(0,0,0,0.05);
 }
-.donut-box{
-  background:#f9fafb;
-  border-radius:12px;
-  padding:0.5rem;
-  border:1px solid #e2e8f0;
-  width:220px;
-  height:220px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  box-shadow:0 2px 6px rgba(0,0,0,0.05);
+.donut-three{
+  display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));
+  gap:1rem;align-items:center;justify-items:center;
 }
+@media (max-width:900px){ .donut-three{grid-template-columns:1fr 1fr;} }
+@media (max-width:600px){ .donut-three{grid-template-columns:1fr;} }
+.donut-cell{
+  width:240px;max-width:100%;height:240px;display:flex;align-items:center;justify-content:center;
+  background:#fff;border:1px solid #e2e8f0;border-radius:10px;
+}
+
 /* ---- detail boxes ---- */
-.detail-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;}
+.detail-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:1rem;}
+@media (max-width:900px){ .detail-row{grid-template-columns:repeat(2,1fr);} }
+@media (max-width:600px){ .detail-row{grid-template-columns:1fr;} }
 .detail-box{background:#f9fafb;border-radius:10px;padding:1rem;border:1px solid #e2e8f0;text-align:center;}
 .detail-box h4{margin:.3rem 0;color:#475569;}
 .detail-box .icon{font-size:1.3rem;color:#2563eb;margin-bottom:.3rem;}
@@ -69,6 +68,7 @@ tbody tr:nth-child(even){background:#f9fafb;}
 <body>
 <div class="page" id="reportArea">
 
+  <!-- Filters -->
   <div class="card">
     <h2><i class="fa-solid fa-sliders"></i> Report Filters</h2>
     <div class="filter-group">
@@ -83,6 +83,7 @@ tbody tr:nth-child(even){background:#f9fafb;}
     </div>
   </div>
 
+  <!-- KPI Summary -->
   <div class="card">
     <h2><i class="fa-solid fa-gauge-high"></i> KPI Summary</h2>
     <div class="kpi-row">
@@ -95,13 +96,17 @@ tbody tr:nth-child(even){background:#f9fafb;}
     </div>
   </div>
 
+  <!-- Performance KPIs (unified full-width panel) -->
   <div class="card">
     <h2><i class="fa-solid fa-chart-pie"></i> Performance KPIs</h2>
-    <div class="donut-row">
-      <div id="perfDonut" class="donut-box"></div>
-      <div id="availDonut" class="donut-box"></div>
-      <div id="qualDonut" class="donut-box"></div>
+    <div class="donut-panel">
+      <div class="donut-three">
+        <div class="donut-cell"><div id="perfDonut"></div></div>
+        <div class="donut-cell"><div id="availDonut"></div></div>
+        <div class="donut-cell"><div id="qualDonut"></div></div>
+      </div>
     </div>
+
     <div class="detail-row">
       <div class="detail-box"><div class="icon"><i class="fa-solid fa-gauge-high"></i></div><h4>Avg Fabric Speed</h4><div class="detail-value" id="avgSpeed">—</div></div>
       <div class="detail-box"><div class="icon"><i class="fa-solid fa-bolt"></i></div><h4>Energy per Meter</h4><div class="detail-value" id="energyPerMeter">—</div></div>
@@ -110,6 +115,7 @@ tbody tr:nth-child(even){background:#f9fafb;}
     </div>
   </div>
 
+  <!-- Hourly Table -->
   <div class="card">
     <h2><i class="fa-solid fa-clock"></i> Hourly Data</h2>
     <table>
@@ -121,8 +127,9 @@ tbody tr:nth-child(even){background:#f9fafb;}
     </table>
   </div>
 
+  <!-- Production & Energy Trend (bar chart) -->
   <div class="card">
-    <h2><i class="fa-solid fa-chart-line"></i> Production & Energy Trend</h2>
+    <h2><i class="fa-solid fa-chart-column"></i> Production & Energy Trend</h2>
     <div id="trendChart"></div>
   </div>
 
@@ -149,35 +156,15 @@ function fmtTime(ts){
   });
 }
 
-/** 
- * ✅ FINAL: Always fetch from exact 00:00 AM IST.
- * We anchor to an IST base and add hours on that base.
- * getTime() then yields the correct UTC ms for ThingsBoard.
- */
+/** FINAL: Always fetch from exact 00:00 AM IST using an IST-anchored base. */
 function getShiftRange(dateStr, shift) {
-  // Base = midnight in IST
   const baseIST = new Date(`${dateStr}T00:00:00+05:30`);
-
-  // helper to add hours on IST-anchored base
   const addHrs = (h) => new Date(baseIST.getTime() + h*60*60*1000);
-
   let startUTC, endUTC;
-
-  if (shift === "A") {            // 00:00–08:00 IST
-    startUTC = addHrs(0);
-    endUTC   = addHrs(8);
-  } else if (shift === "B") {     // 08:00–16:00 IST
-    startUTC = addHrs(8);
-    endUTC   = addHrs(16);
-  } else if (shift === "C") {     // 16:00–24:00 IST
-    startUTC = addHrs(16);
-    endUTC   = addHrs(24);
-  } else {                        // Full day 00:00–24:00 IST
-    startUTC = addHrs(0);
-    endUTC   = addHrs(24);
-  }
-
-  // ThingsBoard expects [startTs, endTs] in UTC ms
+  if (shift === "A") { startUTC = addHrs(0);  endUTC = addHrs(8); }
+  else if (shift === "B"){ startUTC = addHrs(8);  endUTC = addHrs(16); }
+  else if (shift === "C"){ startUTC = addHrs(16); endUTC = addHrs(24); }
+  else { startUTC = addHrs(0); endUTC = addHrs(24); }
   return { startTs: startUTC.getTime(), endTs: endUTC.getTime()-1 };
 }
 
@@ -232,6 +219,7 @@ function renderTable(rows){
   });
 }
 
+/* Donuts */
 function renderDonut(id,label,value){
   const color=value>=90?"#22c55e":value>=70?"#f59e0b":"#ef4444";
   const capped=Math.min(100,value);
@@ -239,13 +227,14 @@ function renderDonut(id,label,value){
     values:[capped,100-capped],
     marker:{colors:[color,"#e5e7eb"]},
     hole:.65,type:"pie",textinfo:"none"
-  }],
-  {showlegend:false,title:{text:label,font:{size:14,color:"#1e3a8a"}},
-   margin:{t:30,b:30,l:30,r:30},height:200,width:200,
-   annotations:[{text:`${value.toFixed(1)}%`,showarrow:false,font:{size:18,color:"#1e293b"}}]},
-  {displaylogo:false,responsive:false});
+  }],{
+    showlegend:false,
+    title:{text:label,font:{size:14,color:"#1e3a8a"}},
+    margin:{t:30,b:30,l:30,r:30},
+    height:220,width:220,
+    annotations:[{text:`${value.toFixed(1)}%`,showarrow:false,font:{size:18,color:"#1e293b"}}]
+  },{displaylogo:false,responsive:false});
 }
-
 function renderAllDonuts(rows){
   const avg=(key)=>rows.length?rows.reduce((s,r)=>s+num(r[key]),0)/rows.length:0;
   renderDonut("perfDonut","Performance",avg("Performance_Hourly"));
@@ -253,21 +242,30 @@ function renderAllDonuts(rows){
   renderDonut("qualDonut","Quality",avg("Quality_Hourly"));
 }
 
+/* Production & Energy Trend as grouped bars */
 function renderChart(rows){
   if(!rows.length){Plotly.purge("trendChart");return;}
-  const t=rows.map(r=>new Date(r.ts)),
-        f=rows.map(r=>r.Meter_Run_Hourly),
-        r=rows.map(r=>r.Runtime_Hourly),
-        e=rows.map(r=>r.Consumption_Hourly),
-        d=rows.map(r=>r.Downtime_Hourly);
-  Plotly.newPlot("trendChart",[
-    {x:t,y:f,name:"Fabric",mode:"lines",line:{color:"#2563eb"}},
-    {x:t,y:r,name:"Runtime",mode:"lines",line:{color:"#22c55e"}},
-    {x:t,y:d,name:"Downtime",mode:"lines",line:{color:"#ef4444"}},
-    {x:t,y:e,name:"Energy",mode:"lines",line:{color:"#f59e0b"}}
-  ],{paper_bgcolor:"#ffffff",plot_bgcolor:"#ffffff",font:{color:"#1e293b"},
-     margin:{l:40,r:20,t:30,b:30},legend:{orientation:"h",y:-0.2}},
-     {displaylogo:false,responsive:true});
+  const x = rows.map(r=>new Date(r.ts)); // plotted in local (we show labels as per browser; table already shows IST)
+  const prod = rows.map(r=>r.Meter_Run_Hourly);
+  const energy = rows.map(r=>r.Consumption_Hourly);
+
+  const traceProd = {
+    x, y: prod, type:"bar", name:"Production (m)", marker:{color:"#2563eb"},
+    offsetgroup: "grp"
+  };
+  const traceEnergy = {
+    x, y: energy, type:"bar", name:"Energy (kWh)", marker:{color:"#ff8f00"},
+    offsetgroup: "grp2"
+  };
+
+  Plotly.newPlot("trendChart", [traceProd, traceEnergy], {
+    barmode: "group",
+    margin:{l:50,r:20,t:20,b:40},
+    xaxis:{title:"Hour", tickformat:"%I:%M %p"},
+    yaxis:{title:"Value"},
+    legend:{orientation:"h",y:-0.25},
+    paper_bgcolor:"#ffffff",plot_bgcolor:"#ffffff",font:{color:"#1e293b"}
+  }, {displaylogo:false,responsive:true});
 }
 
 async function generate(){
