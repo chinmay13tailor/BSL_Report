@@ -141,65 +141,51 @@ const CONFIG={
 const qs=new URLSearchParams(location.search);
 const JWT=qs.get("token")||"";const DEVICE_ID=CONFIG.DEFAULT_DEVICE_ID;
 function num(v){const n=Number(v);return Number.isFinite(n)?n:0;}
-function fmtTime(ts){const corrected=ts-3600000;
-  return new Date(corrected).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});}
+function fmtTime(ts){return new Date(ts).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",hour12:true,timeZone:"Asia/Kolkata"});}
 
-
-// ✅ Fetch data aligned to Indian Standard Time (UTC+5:30)
-// ✅ Always fetch data aligned to Indian Standard Time (GMT+5:30)
-// ✅ Always align data fetch with Indian Standard Time (GMT+5:30)
-// ✅ Always fetch data aligned to Indian Standard Time (GMT+5:30)
+// ✅ Corrected, working version for 00:00 IST data
 function getShiftRange(dateStr, shift) {
-  // Create date starting at midnight IST (not UTC)
+  // Start from IST midnight
   const date = new Date(dateStr + "T00:00:00+05:30");
   let start = new Date(date);
   let end = new Date(date);
 
   // Define shift times in IST
   if (shift === "A") {
-    start.setHours(0, 0, 0, 0);
-    end.setHours(8, 0, 0, 0);
+    start.setHours(0,0,0,0);
+    end.setHours(8,0,0,0);
   } else if (shift === "B") {
-    start.setHours(8, 0, 0, 0);
-    end.setHours(16, 0, 0, 0);
+    start.setHours(8,0,0,0);
+    end.setHours(16,0,0,0);
   } else if (shift === "C") {
-    start.setHours(16, 0, 0, 0);
-    end.setHours(23, 59, 59, 999);
+    start.setHours(16,0,0,0);
+    end.setHours(23,59,59,999);
   } else {
-    // Full Day
-    start.setHours(0, 0, 0, 0);
-    end.setHours(23, 59, 59, 999);
+    start.setHours(0,0,0,0);
+    end.setHours(23,59,59,999);
   }
 
-  // ✅ Convert IST → UTC timestamps for ThingsBoard API
+  // Convert IST → UTC for ThingsBoard
   const IST_OFFSET = 5.5 * 60 * 60 * 1000;
   const startTs = start.getTime() - IST_OFFSET;
   const endTs = end.getTime() - IST_OFFSET;
-
-  console.log("Shift:", shift);
-  console.log("IST Start:", start.toString());
-  console.log("IST End:", end.toString());
-  console.log("UTC StartTs:", startTs);
-  console.log("UTC EndTs:", endTs);
-
   return { startTs, endTs };
 }
 
-}
-
-
 async function fetchHourlyData(startTs,endTs){
   const url=`${CONFIG.API_BASE_URL}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=${CONFIG.KEYS.join(",")}&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`;
-  const res=await fetch(url,{headers:{"X-Authorization":`Bearer ${JWT}`}});
+  const res=await fetch(url,{headers:{"X-Authorization":`Bearer ${JWT}`}}); 
   if(!res.ok)throw new Error(res.statusText);return res.json();
 }
+
 function mergeSeries(obj){const map=new Map();
-  for(const [key,arr]of Object.entries(obj)){
+  for(const [key,arr] of Object.entries(obj)){
     (arr||[]).forEach(p=>{const t=+p.ts;const row=map.get(t)||{ts:t};
       row[key]=num(p.value);map.set(t,row);});
   }
   return Array.from(map.values()).sort((a,b)=>a.ts-b.ts);
 }
+
 function renderKpis(rows){
   const tF=rows.reduce((s,r)=>s+num(r.Meter_Run_Hourly),0),
         tR=rows.reduce((s,r)=>s+num(r.Runtime_Hourly),0),
@@ -223,6 +209,7 @@ function renderKpis(rows){
   shiftEfficiency.textContent=aO.toFixed(1)+"%";
   productionConsistency.textContent=consistency.toFixed(1)+"%";
 }
+
 function renderTable(rows){
   const tb=document.getElementById("hourlyTable");tb.innerHTML="";
   rows.forEach(r=>{
@@ -235,6 +222,7 @@ function renderTable(rows){
       td.textContent=v??"—";tr.appendChild(td);});tb.appendChild(tr);
   });
 }
+
 function renderDonut(id,label,value){
   const color=value>=90?"#22c55e":value>=70?"#f59e0b":"#ef4444";
   const capped=Math.min(100,value);
@@ -243,24 +231,22 @@ function renderDonut(id,label,value){
     marker:{colors:[color,"#e5e7eb"]},
     hole:.65,type:"pie",textinfo:"none"
   }],
-  {
-    showlegend:false,
-    title:{text:label,font:{size:14,color:"#1e3a8a"}},
-    margin:{t:30,b:30,l:30,r:30},
-    height:200,width:200,
-    annotations:[{text:`${value.toFixed(1)}%`,showarrow:false,font:{size:18,color:"#1e293b"}}]
-  },
+  {showlegend:false,title:{text:label,font:{size:14,color:"#1e3a8a"}},
+   margin:{t:30,b:30,l:30,r:30},height:200,width:200,
+   annotations:[{text:`${value.toFixed(1)}%`,showarrow:false,font:{size:18,color:"#1e293b"}}]},
   {displaylogo:false,responsive:false});
 }
+
 function renderAllDonuts(rows){
   const avg=(key)=>rows.length?rows.reduce((s,r)=>s+num(r[key]),0)/rows.length:0;
   renderDonut("perfDonut","Performance",avg("Performance_Hourly"));
   renderDonut("availDonut","Availability",avg("Availability_Hourly"));
   renderDonut("qualDonut","Quality",avg("Quality_Hourly"));
 }
+
 function renderChart(rows){
   if(!rows.length){Plotly.purge("trendChart");return;}
-  const t=rows.map(r=>new Date(r.ts-3600000)),
+  const t=rows.map(r=>new Date(r.ts)),
         f=rows.map(r=>r.Meter_Run_Hourly),
         r=rows.map(r=>r.Runtime_Hourly),
         e=rows.map(r=>r.Consumption_Hourly),
@@ -274,6 +260,7 @@ function renderChart(rows){
      margin:{l:40,r:20,t:30,b:30},legend:{orientation:"h",y:-0.2}},
      {displaylogo:false,responsive:true});
 }
+
 async function generate(){
   const dateStr=dateInput.value;
   const shiftVal=shift.value.replace("Shift ","").trim();
@@ -291,6 +278,7 @@ async function generate(){
     status.textContent="Error ⚠️";}
   btn.disabled=false;
 }
+
 async function downloadPDF(){
   const{jsPDF}=window.jspdf;
   const element=document.getElementById("reportArea");
