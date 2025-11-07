@@ -140,46 +140,55 @@ const CONFIG={
 };
 const qs=new URLSearchParams(location.search);
 const JWT=qs.get("token")||"";const DEVICE_ID=CONFIG.DEFAULT_DEVICE_ID;
+
 function num(v){const n=Number(v);return Number.isFinite(n)?n:0;}
-function fmtTime(ts){return new Date(ts).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",hour12:true,timeZone:"Asia/Kolkata"});}
+function fmtTime(ts){
+  // Always render as IST
+  return new Date(ts).toLocaleTimeString("en-IN",{
+    hour:"2-digit",minute:"2-digit",hour12:true,timeZone:"Asia/Kolkata"
+  });
+}
 
-// ✅ Corrected, working version for 00:00 IST data
+/** 
+ * ✅ FINAL: Always fetch from exact 00:00 AM IST.
+ * We anchor to an IST base and add hours on that base.
+ * getTime() then yields the correct UTC ms for ThingsBoard.
+ */
 function getShiftRange(dateStr, shift) {
-  // Start from IST midnight
-  const date = new Date(dateStr + "T00:00:00+05:30");
-  let start = new Date(date);
-  let end = new Date(date);
+  // Base = midnight in IST
+  const baseIST = new Date(`${dateStr}T00:00:00+05:30`);
 
-  // Define shift times in IST
-  if (shift === "A") {
-    start.setHours(0,0,0,0);
-    end.setHours(8,0,0,0);
-  } else if (shift === "B") {
-    start.setHours(8,0,0,0);
-    end.setHours(16,0,0,0);
-  } else if (shift === "C") {
-    start.setHours(16,0,0,0);
-    end.setHours(23,59,59,999);
-  } else {
-    start.setHours(0,0,0,0);
-    end.setHours(23,59,59,999);
+  // helper to add hours on IST-anchored base
+  const addHrs = (h) => new Date(baseIST.getTime() + h*60*60*1000);
+
+  let startUTC, endUTC;
+
+  if (shift === "A") {            // 00:00–08:00 IST
+    startUTC = addHrs(0);
+    endUTC   = addHrs(8);
+  } else if (shift === "B") {     // 08:00–16:00 IST
+    startUTC = addHrs(8);
+    endUTC   = addHrs(16);
+  } else if (shift === "C") {     // 16:00–24:00 IST
+    startUTC = addHrs(16);
+    endUTC   = addHrs(24);
+  } else {                        // Full day 00:00–24:00 IST
+    startUTC = addHrs(0);
+    endUTC   = addHrs(24);
   }
 
-  // Convert IST → UTC for ThingsBoard
-  const IST_OFFSET = 5.5 * 60 * 60 * 1000;
-  const startTs = start.getTime() - IST_OFFSET;
-  const endTs = end.getTime() - IST_OFFSET;
-  return { startTs, endTs };
+  // ThingsBoard expects [startTs, endTs] in UTC ms
+  return { startTs: startUTC.getTime(), endTs: endUTC.getTime()-1 };
 }
 
 async function fetchHourlyData(startTs,endTs){
   const url=`${CONFIG.API_BASE_URL}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=${CONFIG.KEYS.join(",")}&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`;
-  const res=await fetch(url,{headers:{"X-Authorization":`Bearer ${JWT}`}}); 
+  const res=await fetch(url,{headers:{"X-Authorization":`Bearer ${JWT}`}});
   if(!res.ok)throw new Error(res.statusText);return res.json();
 }
 
 function mergeSeries(obj){const map=new Map();
-  for(const [key,arr] of Object.entries(obj)){
+  for(const [key,arr]of Object.entries(obj)){
     (arr||[]).forEach(p=>{const t=+p.ts;const row=map.get(t)||{ts:t};
       row[key]=num(p.value);map.set(t,row);});
   }
@@ -201,8 +210,8 @@ function renderKpis(rows){
   oee.textContent=aO.toFixed(1)+"%";
   const avgSpeedVal=tR>0?(tF/tR):0,energyPerMeterVal=tF>0?(tE/tF):0;
   const prodList=rows.map(r=>r.Meter_Run_Hourly).filter(x=>x>0);
-  const mean=prodList.reduce((s,x)=>s+x,0)/prodList.length;
-  const sd=Math.sqrt(prodList.reduce((s,x)=>s+(x-mean)**2,0)/prodList.length);
+  const mean=prodList.length?prodList.reduce((s,x)=>s+x,0)/prodList.length:0;
+  const sd=prodList.length?Math.sqrt(prodList.reduce((s,x)=>s+(x-mean)**2,0)/prodList.length):0;
   const consistency=mean?(sd/mean*100):0;
   avgSpeed.textContent=avgSpeedVal.toFixed(1);
   energyPerMeter.textContent=energyPerMeterVal.toFixed(3);
