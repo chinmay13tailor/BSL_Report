@@ -144,12 +144,14 @@ function num(v){const n=Number(v);return Number.isFinite(n)?n:0;}
 function fmtTime(ts){const corrected=ts-3600000;
   return new Date(corrected).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});}
 
-// ✅ Correct IST fix – fetch data starting from 00:00 IST
+
+// ✅ Fetch data aligned to Indian Standard Time (UTC+5:30)
 function getShiftRange(dateStr, shift) {
   const date = new Date(dateStr);
   let start = new Date(date);
   let end = new Date(date);
 
+  // Define local IST shift hours
   if (shift === "A") {
     start.setHours(0, 0, 0, 0);
     end.setHours(8, 0, 0, 0);
@@ -164,13 +166,15 @@ function getShiftRange(dateStr, shift) {
     end.setHours(23, 59, 59, 999);
   }
 
-  // ✅ Subtract 5h30m (to align IST midnight with UTC timestamps)
+  // ✅ Convert local (IST) time to UTC timestamps for the API
+  // Add 5h30m to align with GMT+5:30
   const IST_OFFSET = 5.5 * 60 * 60 * 1000;
-  return {
-    startTs: start.getTime() - IST_OFFSET,
-    endTs: end.getTime() - IST_OFFSET
-  };
+  const startTs = start.getTime() + IST_OFFSET;
+  const endTs = end.getTime() + IST_OFFSET;
+
+  return { startTs, endTs };
 }
+
 
 async function fetchHourlyData(startTs,endTs){
   const url=`${CONFIG.API_BASE_URL}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=${CONFIG.KEYS.join(",")}&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`;
