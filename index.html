@@ -148,13 +148,14 @@ function fmtTime(ts){const corrected=ts-3600000;
 // ✅ Fetch data aligned to Indian Standard Time (UTC+5:30)
 // ✅ Always fetch data aligned to Indian Standard Time (GMT+5:30)
 // ✅ Always align data fetch with Indian Standard Time (GMT+5:30)
+// ✅ Always fetch data aligned to Indian Standard Time (GMT+5:30)
 function getShiftRange(dateStr, shift) {
-  // Create date in local IST midnight explicitly
+  // Create date starting at midnight IST (not UTC)
   const date = new Date(dateStr + "T00:00:00+05:30");
-  const start = new Date(date);
-  const end = new Date(date);
+  let start = new Date(date);
+  let end = new Date(date);
 
-  // Define shifts in IST
+  // Define shift times in IST
   if (shift === "A") {
     start.setHours(0, 0, 0, 0);
     end.setHours(8, 0, 0, 0);
@@ -165,16 +166,17 @@ function getShiftRange(dateStr, shift) {
     start.setHours(16, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
   } else {
-    // Full day
+    // Full Day
     start.setHours(0, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
   }
 
-  // ✅ Convert these IST times to UTC timestamps
+  // ✅ Convert IST → UTC timestamps for ThingsBoard API
   const IST_OFFSET = 5.5 * 60 * 60 * 1000;
   const startTs = start.getTime() - IST_OFFSET;
   const endTs = end.getTime() - IST_OFFSET;
 
+  console.log("Shift:", shift);
   console.log("IST Start:", start.toString());
   console.log("IST End:", end.toString());
   console.log("UTC StartTs:", startTs);
@@ -182,6 +184,7 @@ function getShiftRange(dateStr, shift) {
 
   return { startTs, endTs };
 }
+
 }
 
 
