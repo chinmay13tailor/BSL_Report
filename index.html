@@ -14,48 +14,35 @@ body{font-family:"Segoe UI",sans-serif;background:#f3f4f6;color:#1e293b;margin:0
 .page{padding:1.5rem;}
 .card{background:#fff;border-radius:12px;padding:1.2rem 1.5rem;margin-bottom:1.5rem;
       box-shadow:0 2px 10px rgba(0,0,0,0.08);}
-.card h2{display:flex;align-items:center;gap:.6rem;font-size:1.1rem;color:#1e3a8a;
-         margin-top:0;margin-bottom:1rem;}
+.card h2{display:flex;align-items:center;gap:.6rem;font-size:1.1rem;color:#1e3a8a;margin:0 0 1rem;}
 .card h2 i{color:#2563eb;}
 .filter-group{display:flex;flex-wrap:wrap;align-items:center;gap:1rem;}
 label{font-weight:600;color:#1e3a8a;}
-input,select,button{padding:.5rem .8rem;border-radius:6px;border:1px solid #cbd5e1;
-                    background:#f8fafc;color:#1e293b;font-size:.9rem;}
+input,select,button{padding:.5rem .8rem;border-radius:6px;border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;font-size:.9rem;}
 button{background:#2563eb;color:#fff;border:0;font-weight:600;cursor:pointer;}
 button:hover{background:#1d4ed8;}
 #generateBtn[disabled]{opacity:.6;cursor:not-allowed;}
 .status-label{font-size:.85rem;color:#475569;min-width:90px;}
 
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;}
-.kpi{background:#fff;border-radius:10px;padding:1rem;text-align:center;
-     box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+.kpi{background:#fff;border-radius:10px;padding:1rem;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
 .kpi h3{margin:0;font-size:.95rem;color:#475569;}
 .kpi .value{font-size:1.4rem;font-weight:700;margin-top:.3rem;color:#2563eb;}
 
-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;
-      overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
 th,td{padding:.7rem .8rem;text-align:center;border-bottom:1px solid #e2e8f0;}
 th{background:#f1f5f9;color:#1e3a8a;}
 tbody tr:nth-child(even){background:#f9fafb;}
 #trendChart{height:380px;}
 
-/* ---- unified donut panel ---- */
-.donut-panel{
-  background:#f9fafb;border:1px solid #e2e8f0;border-radius:12px;
-  padding:1rem 1rem 0.5rem; box-shadow:0 2px 6px rgba(0,0,0,0.05);
-}
-.donut-three{
-  display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));
-  gap:1rem;align-items:center;justify-items:center;
-}
+/* unified donut panel */
+.donut-panel{background:#f9fafb;border:1px solid #e2e8f0;border-radius:12px;padding:1rem 1rem .5rem;box-shadow:0 2px 6px rgba(0,0,0,0.05);}
+.donut-three{display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:1rem;align-items:center;justify-items:center;}
 @media (max-width:900px){ .donut-three{grid-template-columns:1fr 1fr;} }
 @media (max-width:600px){ .donut-three{grid-template-columns:1fr;} }
-.donut-cell{
-  width:240px;max-width:100%;height:240px;display:flex;align-items:center;justify-content:center;
-  background:#fff;border:1px solid #e2e8f0;border-radius:10px;
-}
+.donut-cell{width:240px;max-width:100%;height:240px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #e2e8f0;border-radius:10px;}
 
-/* ---- detail boxes ---- */
+/* detail boxes */
 .detail-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:1rem;}
 @media (max-width:900px){ .detail-row{grid-template-columns:repeat(2,1fr);} }
 @media (max-width:600px){ .detail-row{grid-template-columns:1fr;} }
@@ -63,10 +50,32 @@ tbody tr:nth-child(even){background:#f9fafb;}
 .detail-box h4{margin:.3rem 0;color:#475569;}
 .detail-box .icon{font-size:1.3rem;color:#2563eb;margin-bottom:.3rem;}
 .detail-value{font-size:1.4rem;font-weight:700;color:#2563eb;}
+
+/* PDF header (show only during export) */
+#pdfHeader{display:none;padding:8px 12px;background:#fff;margin-bottom:10px;}
+.pdf-header-wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.pdf-logo{height:42px;object-fit:contain;}
+.pdf-title{flex:1;text-align:center;}
+.pdf-title h1{margin:0;color:#16a3ff;font-size:20px;font-weight:800;}
+.pdf-sub{margin:4px 0 0;font-size:12px;color:#111;}
+.pdf-divider{height:8px;background:#000;margin:6px auto 0;border-radius:2px;width:60%;}
 </style>
 </head>
 <body>
 <div class="page" id="reportArea">
+
+  <!-- Hidden PDF header (shown only for export) -->
+  <div id="pdfHeader">
+    <div class="pdf-header-wrap">
+      <img src="BSL.png" alt="BSL" class="pdf-logo" id="leftLogo">
+      <div class="pdf-title">
+        <h1>Montex Production & Energy Performance Report</h1>
+        <div class="pdf-divider"></div>
+        <div class="pdf-sub" id="pdfSubline">—</div>
+      </div>
+      <img src="PlantwizLogo.png" alt="PlantWiz" class="pdf-logo" id="rightLogo">
+    </div>
+  </div>
 
   <!-- Filters -->
   <div class="card">
@@ -143,29 +152,31 @@ const CONFIG={
     "Downtime_Hourly","Idletime_Hourly","Oee_Hourly",
     "Performance_Hourly","Availability_Hourly","Quality_Hourly"
   ],
-  DEFAULT_DEVICE_ID:"81261350-b886-11f0-87ea-b9809c1a7a9e"
+  DEFAULT_DEVICE_ID:"81261350-b886-11f0-87ea-b9809c1a7a9e",
+  DEFAULT_COMPANY:"BSL (Bhilwara)",
+  DEFAULT_MACHINE:"Machine 01"
 };
 const qs=new URLSearchParams(location.search);
-const JWT=qs.get("token")||"";const DEVICE_ID=CONFIG.DEFAULT_DEVICE_ID;
+const JWT=qs.get("token")||"";
+const DEVICE_ID=CONFIG.DEFAULT_DEVICE_ID;
+const COMPANY = qs.get("company") || CONFIG.DEFAULT_COMPANY;
+const MACHINE = qs.get("machine") || CONFIG.DEFAULT_MACHINE;
+document.getElementById("pdfSubline").textContent = `${COMPANY} • ${MACHINE}`;
 
 function num(v){const n=Number(v);return Number.isFinite(n)?n:0;}
 function fmtTime(ts){
-  // Always render as IST
-  return new Date(ts).toLocaleTimeString("en-IN",{
-    hour:"2-digit",minute:"2-digit",hour12:true,timeZone:"Asia/Kolkata"
-  });
+  return new Date(ts).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",hour12:true,timeZone:"Asia/Kolkata"});
 }
-
-/** FINAL: Always fetch from exact 00:00 AM IST using an IST-anchored base. */
+/* IST anchored shift range */
 function getShiftRange(dateStr, shift) {
   const baseIST = new Date(`${dateStr}T00:00:00+05:30`);
   const addHrs = (h) => new Date(baseIST.getTime() + h*60*60*1000);
-  let startUTC, endUTC;
-  if (shift === "A") { startUTC = addHrs(0);  endUTC = addHrs(8); }
-  else if (shift === "B"){ startUTC = addHrs(8);  endUTC = addHrs(16); }
-  else if (shift === "C"){ startUTC = addHrs(16); endUTC = addHrs(24); }
-  else { startUTC = addHrs(0); endUTC = addHrs(24); }
-  return { startTs: startUTC.getTime(), endTs: endUTC.getTime()-1 };
+  let s,e;
+  if (shift==="A"){s=addHrs(0);e=addHrs(8);}
+  else if (shift==="B"){s=addHrs(8);e=addHrs(16);}
+  else if (shift==="C"){s=addHrs(16);e=addHrs(24);}
+  else {s=addHrs(0);e=addHrs(24);}
+  return {startTs:s.getTime(), endTs:e.getTime()-1};
 }
 
 async function fetchHourlyData(startTs,endTs){
@@ -195,6 +206,7 @@ function renderKpis(rows){
   idle.textContent=tI.toFixed(1);
   energy.textContent=tE.toFixed(1);
   oee.textContent=aO.toFixed(1)+"%";
+
   const avgSpeedVal=tR>0?(tF/tR):0,energyPerMeterVal=tF>0?(tE/tF):0;
   const prodList=rows.map(r=>r.Meter_Run_Hourly).filter(x=>x>0);
   const mean=prodList.length?prodList.reduce((s,x)=>s+x,0)/prodList.length:0;
@@ -214,8 +226,8 @@ function renderTable(rows){
       r.Runtime_Hourly?.toFixed(1),r.Downtime_Hourly?.toFixed(1),
       r.Idletime_Hourly?.toFixed(1),r.Consumption_Hourly?.toFixed(1),
       r.Oee_Hourly?.toFixed(1)];
-    cells.forEach(v=>{const td=document.createElement("td");
-      td.textContent=v??"—";tr.appendChild(td);});tb.appendChild(tr);
+    cells.forEach(v=>{const td=document.createElement("td");td.textContent=v??"—";tr.appendChild(td);});
+    tb.appendChild(tr);
   });
 }
 
@@ -242,30 +254,23 @@ function renderAllDonuts(rows){
   renderDonut("qualDonut","Quality",avg("Quality_Hourly"));
 }
 
-/* Production & Energy Trend as grouped bars */
+/* Grouped bars */
 function renderChart(rows){
   if(!rows.length){Plotly.purge("trendChart");return;}
-  const x = rows.map(r=>new Date(r.ts)); // plotted in local (we show labels as per browser; table already shows IST)
+  const x = rows.map(r=>new Date(r.ts));
   const prod = rows.map(r=>r.Meter_Run_Hourly);
   const energy = rows.map(r=>r.Consumption_Hourly);
-
-  const traceProd = {
-    x, y: prod, type:"bar", name:"Production (m)", marker:{color:"#2563eb"},
-    offsetgroup: "grp"
-  };
-  const traceEnergy = {
-    x, y: energy, type:"bar", name:"Energy (kWh)", marker:{color:"#ff8f00"},
-    offsetgroup: "grp2"
-  };
-
-  Plotly.newPlot("trendChart", [traceProd, traceEnergy], {
-    barmode: "group",
+  Plotly.newPlot("trendChart", [
+    {x,y:prod,type:"bar",name:"Production (m)",marker:{color:"#2563eb"},offsetgroup:"a"},
+    {x,y:energy,type:"bar",name:"Energy (kWh)",marker:{color:"#ff8f00"},offsetgroup:"b"},
+  ],{
+    barmode:"group",
     margin:{l:50,r:20,t:20,b:40},
-    xaxis:{title:"Hour", tickformat:"%I:%M %p"},
+    xaxis:{title:"Hour",tickformat:"%I:%M %p"},
     yaxis:{title:"Value"},
     legend:{orientation:"h",y:-0.25},
     paper_bgcolor:"#ffffff",plot_bgcolor:"#ffffff",font:{color:"#1e293b"}
-  }, {displaylogo:false,responsive:true});
+  },{displaylogo:false,responsive:true});
 }
 
 async function generate(){
@@ -280,22 +285,30 @@ async function generate(){
     const rows=mergeSeries(json);
     renderKpis(rows);renderAllDonuts(rows);renderTable(rows);renderChart(rows);
     status.textContent="Generated ✅";
-  }catch(e){console.error(e);
-    alert("Failed to load data: "+e.message);
-    status.textContent="Error ⚠️";}
+  }catch(e){console.error(e);alert("Failed to load data: "+e.message);status.textContent="Error ⚠️";}
   btn.disabled=false;
 }
 
+/* PDF with header logos & subline */
 async function downloadPDF(){
-  const{jsPDF}=window.jspdf;
-  const element=document.getElementById("reportArea");
-  const canvas=await html2canvas(element,{scale:2});
-  const img=canvas.toDataURL("image/png");
-  const pdf=new jsPDF("p","mm","a4");
-  const pageWidth=210;const imgProps=pdf.getImageProperties(img);
-  const imgHeight=imgProps.height*pageWidth/imgProps.width;
-  pdf.addImage(img,"PNG",0,0,pageWidth,imgHeight);
-  pdf.save("Montex_Report.pdf");
+  const header = document.getElementById("pdfHeader");
+  header.style.display = "block";             // show header only for export
+  await new Promise(r=>setTimeout(r,80));     // layout settle
+
+  const {jsPDF} = window.jspdf;
+  const element = document.getElementById("reportArea");
+  const canvas = await html2canvas(element,{scale:2, useCORS:true});
+  const img = canvas.toDataURL("image/png");
+
+  const pdf = new jsPDF("p","mm","a4");
+  const pageW = pdf.internal.pageSize.getWidth();
+  const imgProps = pdf.getImageProperties(img);
+  const imgH = imgProps.height * pageW / imgProps.width;
+
+  pdf.addImage(img,"PNG",0,0,pageW,imgH);
+  pdf.save(`Montex_Report_${(new Date()).toISOString().slice(0,10)}.pdf`);
+
+  header.style.display = "none";              // hide header back
 }
 </script>
 </body>
