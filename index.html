@@ -1,60 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Montex Production & Energy Performance Report</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
 
 <style>
 /* --- Base --- */
-body{font-family:"Segoe UI",sans-serif;background:#f3f4f6;color:#1e293b;margin:0;}
-.page{padding:1.5rem;}
-.card{background:#fff;border-radius:12px;padding:1.2rem 1.5rem;margin-bottom:1.5rem;
-      box-shadow:0 2px 10px rgba(0,0,0,0.08);}
-.card h2{display:flex;align-items:center;gap:.6rem;font-size:1.1rem;color:#1e3a8a;margin:0 0 1rem;}
-.card h2 i{color:#2563eb;}
-.filter-group{display:flex;flex-wrap:wrap;align-items:center;gap:1rem;}
-label{font-weight:600;color:#1e3a8a;}
-input,select,button{padding:.5rem .8rem;border-radius:6px;border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;font-size:.9rem;}
-button{background:#2563eb;color:#fff;border:0;font-weight:600;cursor:pointer;}
-button:hover{background:#1d4ed8;}
-#generateBtn[disabled]{opacity:.6;cursor:not-allowed;}
+body{font-family:"Segoe UI",sans-serif;background:#f3f4f6;color:#1e293b;margin:0}
+.page{padding:1.5rem}
+.card{background:#fff;border-radius:12px;padding:1.2rem 1.5rem;margin-bottom:1.5rem;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.card h2{display:flex;align-items:center;gap:.6rem;font-size:1.1rem;color:#1e3a8a;margin:0 0 1rem}
+.card h2 i{color:#2563eb}
+.filter-group{display:flex;flex-wrap:wrap;align-items:center;gap:1rem}
+label{font-weight:600;color:#1e3a8a}
+input,select,button{padding:.5rem .8rem;border-radius:6px;border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;font-size:.9rem}
+button{background:#2563eb;color:#fff;border:0;font-weight:600;cursor:pointer}
+button:hover{background:#1d4ed8}
+#generateBtn[disabled]{opacity:.6;cursor:not-allowed}
 .status-label{font-size:.85rem;color:#475569;min-width:90px}
 
 /* --- KPI summary --- */
-.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;}
-.kpi{background:#fff;border-radius:10px;padding:1rem;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
-.kpi h3{margin:0;font-size:.95rem;color:#475569;}
-.kpi .value{font-size:1.4rem;font-weight:700;margin-top:.3rem;color:#2563eb;}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem}
+.kpi{background:#fff;border-radius:10px;padding:1rem;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.kpi h3{margin:0;font-size:.95rem;color:#475569}
+.kpi .value{font-size:1.4rem;font-weight:700;margin-top:.3rem;color:#2563eb}
 
 /* --- Table --- */
-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
-th,td{padding:.7rem .8rem;text-align:center;border-bottom:1px solid #e2e8f0;}
-th{background:#f1f5f9;color:#1e3a8a;}
-tbody tr:nth-child(even){background:#f9fafb;}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+th,td{padding:.7rem .8rem;text-align:center;border-bottom:1px solid #e2e8f0}
+th{background:#f1f5f9;color:#1e3a8a}
+tbody tr:nth-child(even){background:#f9fafb}
 
 /* --- Donuts --- */
-.donut-panel{background:#f9fafb;border:1px solid #e2e8f0;border-radius:12px;padding:1rem 1rem .5rem;box-shadow:0 2px 6px rgba(0,0,0,0.05);}
-.donut-three{display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:1rem;align-items:center;justify-items:center;}
-@media (max-width:900px){ .donut-three{grid-template-columns:1fr 1fr;} }
-@media (max-width:600px){ .donut-three{grid-template-columns:1fr;} }
-.donut-cell{width:240px;max-width:100%;height:240px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #e2e8f0;border-radius:10px;}
+.donut-panel{background:#f9fafb;border:1px solid #e2e8f0;border-radius:12px;padding:1rem 1rem .5rem;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.donut-three{display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:1rem;align-items:center;justify-items:center}
+@media (max-width:900px){.donut-three{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.donut-three{grid-template-columns:1fr}}
+.donut-cell{width:240px;max-width:100%;height:240px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #e2e8f0;border-radius:10px}
 
-.detail-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:1rem;}
-@media (max-width:900px){ .detail-row{grid-template-columns:repeat(2,1fr);} }
-@media (max-width:600px){ .detail-row{grid-template-columns:1fr;} }
-.detail-box{background:#f9fafb;border-radius:10px;padding:1rem;border:1px solid #e2e8f0;text-align:center;}
-.detail-box h4{margin:.3rem 0;color:#475569;}
-.detail-box .icon{font-size:1.3rem;color:#2563eb;margin-bottom:.3rem;}
-.detail-value{font-size:1.4rem;font-weight:700;color:#2563eb;}
+.detail-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:1rem}
+@media (max-width:900px){.detail-row{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:600px){.detail-row{grid-template-columns:1fr}}
+.detail-box{background:#f9fafb;border-radius:10px;padding:1rem;border:1px solid #e2e8f0;text-align:center}
+.detail-box h4{margin:.3rem 0;color:#475569}
+.detail-box .icon{font-size:1.3rem;color:#2563eb;margin-bottom:.3rem}
+.detail-value{font-size:1.4rem;font-weight:700;color:#2563eb}
 
 #trendChart{height:380px}
 
-/* --- PDF Header (separate block, only for export) --- */
+/* --- PDF Header --- */
 #pdfHeader{display:none;margin-bottom:12px}
 .pdf-head-card{background:#fff;border-radius:12px;border:1px solid #e5e7eb;padding:10px 14px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .pdf-header-wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -64,6 +63,17 @@ tbody tr:nth-child(even){background:#f9fafb;}
 .pdf-sub{margin:4px 0 0;font-size:12px;color:#111}
 .pdf-meta{margin-top:2px;font-size:12px;color:#334155}
 
+/* --- PDF Footer (Remarks + signatures) --- */
+#pdfFooter{display:none;margin-top:12px}
+.pdf-foot-card{background:#fff;border-radius:12px;border:1px solid #e5e7eb;padding:12px 14px;box-shadow:0 2px 8px rgba(0,0,0,.06);page-break-inside:avoid}
+.remark-label{font-weight:600;color:#1e3a8a;margin-bottom:6px}
+.remark-box{height:70px;border:2px dashed #94a3b8;border-radius:10px;background:#f8fafc}
+.sign-row{display:flex;gap:24px;margin-top:12px}
+.sig{flex:1}
+.sig label{display:block;font-size:.9rem;font-weight:700;color:#475569;margin-bottom:8px}
+.sig .line{height:1px;background:#0f172a;border:0}
+@media (max-width:700px){.sign-row{flex-direction:column;gap:16px}}
+
 /* hide helpers */
 .hide-for-pdf{display:block}
 .pdf-mode .hide-for-pdf{display:none !important}
@@ -72,7 +82,7 @@ tbody tr:nth-child(even){background:#f9fafb;}
 <body>
 <div class="page" id="reportArea">
 
-  <!-- Header shown ONLY in PDF -->
+  <!-- Header: PDF-only -->
   <div id="pdfHeader" class="pdf-head-card">
     <div class="pdf-header-wrap">
       <img src="BSL.png" alt="BSL" class="pdf-logo" id="leftLogo">
@@ -149,53 +159,73 @@ tbody tr:nth-child(even){background:#f9fafb;}
     <div id="trendChart"></div>
   </div>
 
+  <!-- Footer: PDF-only -->
+  <div id="pdfFooter" class="pdf-foot-card">
+    <div class="remark-label">Remarks:</div>
+    <div class="remark-box"></div>
+
+    <div class="sign-row">
+      <div class="sig">
+        <label>Reviewed By:</label>
+        <hr class="line" />
+      </div>
+      <div class="sig">
+        <label>Checked By:</label>
+        <hr class="line" />
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
 const CONFIG={
   API_BASE_URL:"https://plantwiz.pimateck.in/api",
-  KEYS:[
-    "Meter_Run_Hourly","Consumption_Hourly","Runtime_Hourly",
-    "Downtime_Hourly","Idletime_Hourly","Oee_Hourly",
-    "Performance_Hourly","Availability_Hourly","Quality_Hourly"
-  ],
+  KEYS:["Meter_Run_Hourly","Consumption_Hourly","Runtime_Hourly","Downtime_Hourly","Idletime_Hourly","Oee_Hourly","Performance_Hourly","Availability_Hourly","Quality_Hourly"],
   DEFAULT_DEVICE_ID:"81261350-b886-11f0-87ea-b9809c1a7a9e",
   DEFAULT_COMPANY:"BSL (Bhilwara)",
   DEFAULT_MACHINE:"Machine 01"
 };
-
 const qs=new URLSearchParams(location.search);
 const JWT=qs.get("token")||"";
 const DEVICE_ID=CONFIG.DEFAULT_DEVICE_ID;
-const COMPANY = qs.get("company") || CONFIG.DEFAULT_COMPANY;
-const MACHINE = qs.get("machine") || CONFIG.DEFAULT_MACHINE;
+const COMPANY=qs.get("company")||CONFIG.DEFAULT_COMPANY;
+const MACHINE=qs.get("machine")||CONFIG.DEFAULT_MACHINE;
 
 function num(v){const n=Number(v);return Number.isFinite(n)?n:0;}
 function fmtTime(ts){return new Date(ts).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",hour12:true,timeZone:"Asia/Kolkata"});}
 
-/* IST anchored range */
-function getShiftRange(dateStr, shift) {
-  const baseIST = new Date(`${dateStr}T00:00:00+05:30`);
-  const addHrs = (h) => new Date(baseIST.getTime() + h*60*60*1000);
+/* IST-anchored range */
+function getShiftRange(dateStr,shift){
+  const baseIST=new Date(`${dateStr}T00:00:00+05:30`);
+  const addHrs=(h)=>new Date(baseIST.getTime()+h*60*60*1000);
   let s,e;
-  if (shift==="A"){s=addHrs(0);e=addHrs(8);}
-  else if (shift==="B"){s=addHrs(8);e=addHrs(16);}
-  else if (shift==="C"){s=addHrs(16);e=addHrs(24);}
-  else {s=addHrs(0);e=addHrs(24);}
-  return {startTs:s.getTime(), endTs:e.getTime()-1};
+  if(shift==="A"){s=addHrs(0);e=addHrs(8);}
+  else if(shift==="B"){s=addHrs(8);e=addHrs(16);}
+  else if(shift==="C"){s=addHrs(16);e=addHrs(24);}
+  else{s=addHrs(0);e=addHrs(24);}
+  return {startTs:s.getTime(),endTs:e.getTime()-1};
 }
 
 async function fetchHourlyData(startTs,endTs){
   const url=`${CONFIG.API_BASE_URL}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=${CONFIG.KEYS.join(",")}&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`;
   const res=await fetch(url,{headers:{"X-Authorization":`Bearer ${JWT}`}});
-  if(!res.ok)throw new Error(res.statusText);return res.json();
+  if(!res.ok)throw new Error(res.statusText);
+  return res.json();
 }
-function mergeSeries(obj){const map=new Map();
-  for(const [key,arr]of Object.entries(obj)){
-    (arr||[]).forEach(p=>{const t=+p.ts;const row=map.get(t)||{ts:t};row[key]=num(p.value);map.set(t,row);});
+function mergeSeries(obj){
+  const map=new Map();
+  for(const [k,arr] of Object.entries(obj)){
+    (arr||[]).forEach(p=>{
+      const t=+p.ts;
+      const row=map.get(t)||{ts:t};
+      row[k]=num(p.value);
+      map.set(t,row);
+    });
   }
   return Array.from(map.values()).sort((a,b)=>a.ts-b.ts);
 }
+
 function renderKpis(rows){
   const tF=rows.reduce((s,r)=>s+num(r.Meter_Run_Hourly),0),
         tR=rows.reduce((s,r)=>s+num(r.Runtime_Hourly),0),
@@ -203,6 +233,7 @@ function renderKpis(rows){
         tI=rows.reduce((s,r)=>s+num(r.Idletime_Hourly),0),
         tE=rows.reduce((s,r)=>s+num(r.Consumption_Hourly),0),
         aO=rows.length?rows.reduce((s,r)=>s+num(r.Oee_Hourly),0)/rows.length:0;
+
   fabricProduced.textContent=tF.toFixed(0)+" m";
   runtime.textContent=tR.toFixed(1);
   downtime.textContent=tD.toFixed(1);
@@ -210,18 +241,21 @@ function renderKpis(rows){
   energy.textContent=tE.toFixed(1);
   oee.textContent=aO.toFixed(1)+"%";
 
-  const avgSpeedVal=tR>0?(tF/tR):0,energyPerMeterVal=tF>0?(tE/tF):0;
+  const avgSpeedVal=tR>0?(tF/tR):0, energyPerMeterVal=tF>0?(tE/tF):0;
   const prodList=rows.map(r=>r.Meter_Run_Hourly).filter(x=>x>0);
   const mean=prodList.length?prodList.reduce((s,x)=>s+x,0)/prodList.length:0;
   const sd=prodList.length?Math.sqrt(prodList.reduce((s,x)=>s+(x-mean)**2,0)/prodList.length):0;
   const consistency=mean?(sd/mean*100):0;
+
   avgSpeed.textContent=avgSpeedVal.toFixed(1);
   energyPerMeter.textContent=energyPerMeterVal.toFixed(3);
   shiftEfficiency.textContent=aO.toFixed(1)+"%";
   productionConsistency.textContent=consistency.toFixed(1)+"%";
 }
+
 function renderTable(rows){
-  const tb=document.getElementById("hourlyTable");tb.innerHTML="";
+  const tb=document.getElementById("hourlyTable");
+  tb.innerHTML="";
   rows.forEach(r=>{
     const tr=document.createElement("tr");
     const cells=[fmtTime(r.ts),r.Meter_Run_Hourly?.toFixed(0),
@@ -232,6 +266,7 @@ function renderTable(rows){
     tb.appendChild(tr);
   });
 }
+
 function renderDonut(id,label,value){
   const color=value>=90?"#22c55e":value>=70?"#f59e0b":"#ef4444";
   const capped=Math.min(100,value);
@@ -240,12 +275,14 @@ function renderDonut(id,label,value){
    annotations:[{text:`${value.toFixed(1)}%`,showarrow:false,font:{size:18,color:"#1e293b"}}]},
   {displaylogo:false,responsive:false});
 }
+
 function renderAllDonuts(rows){
-  const avg=(key)=>rows.length?rows.reduce((s,r)=>s+num(r[key]),0)/rows.length:0;
+  const avg=(k)=>rows.length?rows.reduce((s,r)=>s+num(r[k]),0)/rows.length:0;
   renderDonut("perfDonut","Performance",avg("Performance_Hourly"));
   renderDonut("availDonut","Availability",avg("Availability_Hourly"));
   renderDonut("qualDonut","Quality",avg("Quality_Hourly"));
 }
+
 function renderChart(rows){
   if(!rows.length){Plotly.purge("trendChart");return;}
   const x=rows.map(r=>new Date(r.ts));
@@ -265,7 +302,7 @@ async function generate(){
   const btn=generateBtn,status=statusLabel;
   if(!dateStr){alert("Please select a date.");return;}
   btn.disabled=true;status.textContent="Generating ...";
-  const{startTs,endTs}=getShiftRange(dateStr,shiftVal);
+  const {startTs,endTs}=getShiftRange(dateStr,shiftVal);
   try{
     const json=await fetchHourlyData(startTs,endTs);
     const rows=mergeSeries(json);
@@ -275,37 +312,40 @@ async function generate(){
   btn.disabled=false;
 }
 
-/* PDF export with header replacing filters (shows Date & Shift) */
+/* PDF export with header + footer replacing filters */
 async function downloadPDF(){
-  // Fill header text
-  document.getElementById("pdfSubline").textContent = `${COMPANY} • ${MACHINE}`;
-  const chosenDate = document.getElementById("dateInput").value || "—";
-  const chosenShift = document.getElementById("shift").value || "—";
-  document.getElementById("pdfMeta").textContent = `Date: ${chosenDate}   |   Shift: ${chosenShift}`;
+  // Header text
+  document.getElementById("pdfSubline").textContent=`${COMPANY} • ${MACHINE}`;
+  const chosenDate=document.getElementById("dateInput").value||"—";
+  const chosenShift=document.getElementById("shift").value||"—";
+  document.getElementById("pdfMeta").textContent=`Date: ${chosenDate}   |   Shift: ${chosenShift}`;
 
-  // Switch to "pdf-mode": hide filters, show header
-  const body = document.body;
+  // Toggle PDF mode
+  const body=document.body;
   body.classList.add("pdf-mode");
-  const header = document.getElementById("pdfHeader");
-  header.style.display = "block";
+  const header=document.getElementById("pdfHeader");
+  const footer=document.getElementById("pdfFooter");
+  header.style.display="block";
+  footer.style.display="block";
 
-  await new Promise(r=>setTimeout(r,80)); // allow layout to settle
+  await new Promise(r=>setTimeout(r,80)); // let layout settle
 
-  const {jsPDF} = window.jspdf;
-  const element = document.getElementById("reportArea");
-  const canvas = await html2canvas(element,{scale:2, useCORS:true});
-  const img = canvas.toDataURL("image/png");
+  const {jsPDF}=window.jspdf;
+  const element=document.getElementById("reportArea");
+  const canvas=await html2canvas(element,{scale:2,useCORS:true});
+  const img=canvas.toDataURL("image/png");
 
-  const pdf = new jsPDF("p","mm","a4");
-  const pageW = pdf.internal.pageSize.getWidth();
-  const imgProps = pdf.getImageProperties(img);
-  const imgH = imgProps.height * pageW / imgProps.width;
+  const pdf=new jsPDF("p","mm","a4");
+  const pageW=pdf.internal.pageSize.getWidth();
+  const imgProps=pdf.getImageProperties(img);
+  const imgH=imgProps.height*pageW/imgProps.width;
 
   pdf.addImage(img,"PNG",0,0,pageW,imgH);
   pdf.save(`Montex_Report_${(new Date()).toISOString().slice(0,10)}.pdf`);
 
   // revert UI
-  header.style.display = "none";
+  header.style.display="none";
+  footer.style.display="none";
   body.classList.remove("pdf-mode");
 }
 </script>
