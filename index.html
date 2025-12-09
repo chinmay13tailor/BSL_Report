@@ -369,15 +369,18 @@ async function downloadPDF(){
 
   const {jsPDF}=window.jspdf;
   const element=document.getElementById("reportArea");
-  const canvas=await html2canvas(element,{scale:2,useCORS:true});
-  const img=canvas.toDataURL("image/png");
+ const canvas = await html2canvas(element, {
+    scale: 1.3,     
+    useCORS: true
+});
+  const img = canvas.toDataURL("image/jpeg", 0.80);
 
   const pdf=new jsPDF("p","mm","a4");
   const pageW=pdf.internal.pageSize.getWidth();
   const imgProps=pdf.getImageProperties(img);
   const imgH=imgProps.height*pageW/imgProps.width;
 
-  pdf.addImage(img,"PNG",0,0,pageW,imgH);
+  pdf.addImage(img, "JPEG", 0, 0, pageW, imgH);
   pdf.save(`Montex_Report_${(new Date()).toISOString().slice(0,10)}.pdf`);
 
   // revert UI
